@@ -1,7 +1,8 @@
 // Mặt màn hình Phát chung (dùng cho màn hình ngoài sân và trong chánh điện):
 // video đã tải lên → chiếu video đồng bộ; link YouTube → ảnh bìa (video xem ở khung YouTube); không phát gì → bảng chờ.
 import { Html } from '@react-three/drei';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useThree } from '@react-three/fiber';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useGame } from '../../state/store';
 import { getVideo } from '../stream';
@@ -74,6 +75,20 @@ const PX = 100; // px CSS cho 1 đơn vị 3D (distanceFactor 4 → 100px/đơn 
 
 /** Trình phát YouTube chính thức đặt đúng lên mặt màn hình 3D (bị cảnh 3D che khuất như vật thật). */
 function YoutubeSurface({ w, h }: { w: number; h: number }) {
+  const gl = useThree((s) => s.gl);
+  // chế độ 'blending' của <Html> tắt pointer-events của canvas (và không bật lại) → mất xoay camera / bấm đi.
+  // Bật lại ngay sau khi <Html> gắn (effect của con chạy trước), trả nguyên trạng khi gỡ.
+  useLayoutEffect(() => {
+    const st = gl.domElement.style;
+    st.pointerEvents = 'auto';
+    st.zIndex = '0';
+    st.position = 'absolute';
+    return () => {
+      st.pointerEvents = '';
+      st.zIndex = '';
+      st.position = '';
+    };
+  }, [gl]);
   return (
     <Html transform occlude="blending" distanceFactor={4} position={[0, 0, 0.01]} zIndexRange={[0, 0]}>
       <YoutubeHost width={w * PX} height={h * PX} />

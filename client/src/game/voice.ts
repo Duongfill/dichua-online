@@ -53,7 +53,19 @@ async function doJoin() {
   });
   r.on(RoomEvent.ActiveSpeakersChanged, () => syncSpeaking());
   r.on(RoomEvent.AudioPlaybackStatusChanged, () => set({ needsGesture: !r.canPlaybackAudio }));
-  r.on(RoomEvent.TrackSubscribed, () => applyVolumes());
+  // livekit-client KHÔNG tự phát âm thanh người khác: phải attach() luồng audio vào trang
+  r.on(RoomEvent.TrackSubscribed, (track) => {
+    if (track.kind === 'audio') {
+      const el = track.attach();
+      el.dataset.voice = '1';
+      el.style.display = 'none';
+      document.body.appendChild(el);
+    }
+    applyVolumes();
+  });
+  r.on(RoomEvent.TrackUnsubscribed, (track) => {
+    track.detach().forEach((el) => el.remove());
+  });
   r.on(RoomEvent.Disconnected, () => {
     if (room === r) {
       room = null;
@@ -80,6 +92,7 @@ export async function leaveVoice(resetMic = true) {
   room = null;
   roomName = '';
   if (r) await r.disconnect().catch(() => {});
+  document.querySelectorAll('audio[data-voice]').forEach((el) => el.remove());
   useGame.setState({ speaking: {} });
   if (resetMic) set({ micOn: false });
 }
