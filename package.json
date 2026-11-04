@@ -1,0 +1,26 @@
+{
+  "name": "chua3d",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chùa Online 3D – ngôi chùa low-poly để cùng đi dạo, lễ Phật, nghe kinh, chat và voice.",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n server,client -c yellow,cyan \"npm:dev -w server\" \"npm:dev -w client\"",
+    "dev:all": "concurrently -k -n voice,server,client -c magenta,yellow,cyan \"npm:voice\" \"npm:dev -w server\" \"npm:dev -w client\"",
+    "voice": "node scripts/voice.mjs",
+    "build": "npm run build -w client",
+    "start": "npm start -w server",
+    "typecheck": "tsc -p server --noEmit && tsc -p client --noEmit"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18.18"
+  }
+}

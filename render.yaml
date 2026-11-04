@@ -1,0 +1,20 @@
+# Render Blueprint – deploy 1 service Node (server phục vụ luôn giao diện đã build).
+# Render → New → Blueprint → chọn repo này. Điền 3 biến LIVEKIT_* khi được hỏi (lấy từ LiveKit Cloud).
+services:
+  - type: web
+    name: chua-online
+    runtime: node
+    plan: free # gói free: "ngủ" sau ~15 phút không ai vào, lần mở đầu chờ ~1 phút
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true # đẩy code lên GitHub là tự deploy lại
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: LIVEKIT_URL # wss://<project>.livekit.cloud
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false

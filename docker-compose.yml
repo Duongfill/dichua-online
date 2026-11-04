@@ -1,0 +1,18 @@
+# Dịch vụ phụ trợ khi phát triển (game server + client vẫn chạy bằng `npm run dev`).
+#   docker compose up -d        # bật LiveKit (voice)
+#   docker compose logs -f      # xem log
+#   docker compose down         # tắt
+#
+# LiveKit chế độ --dev: API key "devkey", secret "secret" – CHỈ dùng trên máy mình.
+# Khớp với .env.example: LIVEKIT_URL=ws://localhost:7880
+services:
+  livekit:
+    image: livekit/livekit-server:latest # nên ghim phiên bản cụ thể khi deploy (vd. v1.8.x)
+    command: --dev --bind 0.0.0.0 --node-ip 127.0.0.1
+    ports:
+      - "7880:7880" # WebSocket / HTTP API
+      - "7881:7881" # WebRTC qua TCP (dự phòng)
+      - "7882:7882/udp" # WebRTC qua UDP
+    restart: unless-stopped
+
+  # Giai đoạn 5 sẽ thêm MinIO (lưu file kinh/video kiểu S3) tại đây.
