@@ -7,6 +7,7 @@ import { useDesktop, useTouch } from '../hooks';
 import { CloseIcon } from '../icons';
 import { PeoplePanel } from './Voice';
 import { StreamPanel } from './Stream';
+import { InstallButton } from '../Pwa';
 import { toggleFullscreen } from './Corners';
 
 const TITLES: Record<PanelId, string> = {
@@ -68,6 +69,7 @@ function SettingsPanel() {
       <button className="btn-glass mt-1 w-full py-2" onClick={() => toggleFullscreen(useGame.getState().toast)}>
         ⛶ Toàn màn hình
       </button>
+      <InstallButton className="mt-1 w-full py-2" />
       <button className="btn-glass mt-1 w-full py-2" onClick={() => useGame.getState().openPanel('stream')}>
         🎵 Phát chung
       </button>

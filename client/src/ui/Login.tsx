@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { HAIR_COLORS, HAIR_STYLES, OUTFITS, ROBE_COLORS, type Appearance } from '@chua/shared';
 import Character, { type Motion } from '../game/Character';
+import { InstallButton } from './Pwa';
 import { useGame } from '../state/store';
 
 function Turntable({ appearance }: { appearance: Appearance }) {
@@ -141,6 +142,7 @@ export default function Login() {
               {t.text}
             </p>
           ))}
+          <InstallButton className="w-full py-2.5" />
           <p className="text-xs text-amberwood-800/70">Giữ lời nói ôn hòa, trang nghiêm. Không quảng cáo.</p>
         </div>
       </form>

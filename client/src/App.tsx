@@ -11,6 +11,8 @@ import { unlockMusic } from './game/bgm';
 import './game/stream'; // phát chung đồng bộ
 import './game/youtube'; // phát link YouTube (trình phát nhúng)
 import Login from './ui/Login';
+import './pwa'; // app cài được: service worker, cập nhật
+import { IosGuide, UpdateBanner } from './ui/Pwa';
 
 export default function App() {
   const phase = useGame((s) => s.phase);
@@ -45,13 +47,26 @@ export default function App() {
     };
   }, []);
 
-  if (phase !== 'playing') return <Login />;
+  const pwa = (
+    <>
+      <UpdateBanner />
+      <IosGuide />
+    </>
+  );
+  if (phase !== 'playing')
+    return (
+      <>
+        <Login />
+        {pwa}
+      </>
+    );
   return (
     <ErrorBoundary>
       <div className="relative h-full w-full">
         <GameCanvas />
         <Hud />
       </div>
+      {pwa}
     </ErrorBoundary>
   );
 }

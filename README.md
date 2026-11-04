@@ -83,6 +83,8 @@ chua3d/
 - **Xin thua**, **Ván mới**, **Rời bàn** (rời bàn / đổi khu vực / mất kết nối giữa ván = thua). Đang ngồi bàn cờ thì nhân vật ngồi yên trên ghế đá (không lỡ tay đi mất). Kết quả được báo trong chat sân chùa + banner cả kênh; tiếng quân gõ xuống bàn đá, tiếng khánh khi chiếu tướng.
 - Kiểm thử luật: `npm test` (18 trường hợp, gồm thế khai cuộc đúng 44 nước hợp lệ).
 
+**Cài thành app (PWA)** – Android / máy tính (Chrome, Edge): bấm **📲 Cài app Chùa Online** ở màn hình vào chùa hoặc trong Cài đặt (hay biểu tượng cài trên thanh địa chỉ). iPhone / iPad: mở bằng Safari → nút đó hiện hướng dẫn *Chia sẻ → Thêm vào MH chính*. App mở toàn màn hình, có icon riêng, tải nhanh nhờ lưu sẵn file game (`client/public/sw.js`); mỗi lần deploy bản mới, người dùng thấy thanh *"Đã có bản mới – Tải lại"*. Icon tạo bằng `node scripts/gen-icons.mjs`. Cần HTTPS (Render có sẵn) hoặc localhost.
+
 **Trang phục** – khi vào chùa chọn *Phật tử* (áo tràng), *Sư thầy* (áo dài, cạo tóc, tràng hạt) hoặc *Sư cô* (áo dài, mũ ni, tràng hạt). Ai đăng nhập mật khẩu Điều phối (`ADMIN_PASSWORD`) sẽ tự mặc áo **Trụ trì** màu vàng có cà sa, kèm nhãn "Trụ trì" trên tên – mọi người đều thấy.
 
 **Phát chung (giai đoạn 5)** – bảng *Phát chung* (Cài đặt → 🎵, hoặc chạm dòng "♪ Đang phát" giữa màn hình)

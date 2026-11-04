@@ -44,8 +44,18 @@ app.post('/api/media/upload', (req, res) => {
 
 app.get('/healthz', (_req, res) => res.json({ ok: true, online: world.online(), channels: world.channels.size }));
 if (fs.existsSync(config.clientDist)) {
-  app.use(express.static(config.clientDist, { maxAge: '1h', index: false }));
-  app.get('*', (_req, res) => res.sendFile(path.join(config.clientDist, 'index.html')));
+  app.use(
+    express.static(config.clientDist, {
+      maxAge: '1h',
+      index: false,
+      setHeaders: (res, file) => {
+        // service worker + manifest phải luôn được kiểm tra bản mới; /assets có mã băm → lưu lâu
+        if (/[\\/](sw\.js|manifest\.webmanifest)$/.test(file)) res.setHeader('Cache-Control', 'no-cache');
+        else if (/[\\/]assets[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      },
+    }),
+  );
+  app.get('*', (_req, res) => res.sendFile(path.join(config.clientDist, 'index.html'), { headers: { 'Cache-Control': 'no-cache' } }));
 }
 
 const limiter = new ChatLimiter();
