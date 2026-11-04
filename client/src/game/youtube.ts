@@ -1,5 +1,5 @@
-// Phát link YouTube bằng trình phát nhúng CHÍNH THỨC (IFrame API) – luôn hiện khung video theo quy định YouTube.
-// Khung là phần tử DOM cố định tạo 1 lần (không bị tải lại khi đổi khu vực), đồng bộ theo giờ server.
+// Phát link YouTube bằng trình phát nhúng CHÍNH THỨC (IFrame API), hiển thị ngay trên mặt màn hình 3D
+// (màn hình ngoài sân / trong chánh điện – xem world/Screen.tsx). Đồng bộ theo giờ server.
 import { streamPos } from '@chua/shared';
 import { serverNow, socket } from '../net/socket';
 import { useGame } from '../state/store';
@@ -14,6 +14,7 @@ interface YTPlayer {
   getDuration(): number;
   getPlayerState(): number;
   setVolume(v: number): void;
+  destroy(): void;
 }
 type YTNS = { Player: new (el: HTMLElement, o: object) => YTPlayer };
 const w = window as unknown as { YT?: YTNS; onYouTubeIframeAPIReady?: () => void };
@@ -28,17 +29,8 @@ const loadApi = () =>
     document.head.appendChild(s);
   }));
 
-// ---- khung nổi ----
-const dock = document.createElement('div');
-dock.className = 'yt-dock';
-dock.dataset.size = 'small';
-dock.innerHTML = `<div class="yt-bar"><span class="yt-title">YouTube</span><button type="button" class="yt-size" title="Phóng to / thu nhỏ">⤢</button></div><div class="yt-frame"><div></div></div>`;
-document.body.appendChild(dock);
-const titleEl = dock.querySelector('.yt-title') as HTMLElement;
-dock.querySelector('.yt-size')!.addEventListener('click', () => {
-  dock.dataset.size = dock.dataset.size === 'large' ? 'small' : 'large';
-});
-
+let host: HTMLElement | null = null;
+let statusEl: HTMLElement | null = null;
 let player: YTPlayer | null = null;
 let ready = false;
 let loadedId = '';
@@ -46,11 +38,40 @@ let stuck = 0;
 const reported = new Set<string>();
 let errorText = '';
 
+function resetPlayer() {
+  try {
+    player?.destroy();
+  } catch {
+    /* bỏ qua */
+  }
+  player = null;
+  ready = false;
+  loadedId = '';
+  stuck = 0;
+  errorText = '';
+}
+
+/** Màn hình 3D đang hiển thị gắn khung chứa trình phát vào đây. */
+export function attachYoutubeHost(el: HTMLElement, status: HTMLElement) {
+  if (host !== el) resetPlayer();
+  host = el;
+  statusEl = status;
+  syncYoutube();
+}
+export function detachYoutubeHost(el: HTMLElement) {
+  if (host !== el) return;
+  resetPlayer();
+  host = statusEl = null;
+}
+
 async function ensurePlayer() {
-  if (player) return;
+  if (player || !host) return;
+  const h = host;
   const YT = await loadApi();
-  if (player) return;
-  player = new YT.Player(dock.querySelector('.yt-frame > div') as HTMLElement, {
+  if (player || host !== h) return;
+  const mount = document.createElement('div');
+  h.replaceChildren(mount);
+  player = new YT.Player(mount, {
     width: '100%',
     height: '100%',
     playerVars: { playsinline: 1, rel: 0, modestbranding: 1 },
@@ -67,13 +88,17 @@ async function ensurePlayer() {
   });
 }
 
+function setStatus(t: string) {
+  if (statusEl && statusEl.textContent !== t) statusEl.textContent = t;
+  if (statusEl) statusEl.style.display = t ? '' : 'none';
+}
+
 export function syncYoutube() {
   const s = useGame.getState();
   const st = s.stream;
   const item = st?.current ? s.lib.find((i) => i.id === st.current) : undefined;
   const show = s.phase === 'playing' && s.settings.stream && item?.kind === 'youtube' && !!item.youtubeId;
-  dock.dataset.show = show ? '1' : '0';
-  if (!show) {
+  if (!show || !host) {
     if (ready && player && player.getPlayerState() === 1) player.pauseVideo();
     return;
   }
@@ -104,13 +129,18 @@ export function syncYoutube() {
     reported.add(item!.id);
     socket.emit('stream:ytDuration', { id: item!.id, duration: d });
   }
-  titleEl.textContent = errorText || (stuck > 2 ? '▶ Chạm vào video để phát' : `♪ ${item!.title}`);
+  setStatus(errorText || (stuck > 2 ? 'Bấm vào bất kỳ đâu để phát video' : ''));
 }
+
+// trình duyệt chặn tự phát → lần chạm/bấm tiếp theo sẽ phát
+window.addEventListener('pointerdown', () => {
+  if (ready && player && stuck > 2) player.playVideo();
+});
 
 setInterval(syncYoutube, 1000);
 useGame.subscribe((s, p) => {
   if (s.stream !== p.stream || s.lib !== p.lib || s.phase !== p.phase || s.settings !== p.settings) syncYoutube();
 });
 
-/** Ảnh bìa video YouTube (cho màn hình 3D). */
+/** Ảnh bìa video YouTube (cho màn hình 3D khi trình phát chưa sẵn sàng). */
 export const youtubeThumb = (id: string) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;

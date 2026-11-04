@@ -85,18 +85,3 @@ canvas { touch-action: none; display: block; }
 .speaking-bars i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes speak-bar { 0%, 100% { height: 4px; } 50% { height: 12px; } }
 @media (prefers-reduced-motion: reduce) { .speaking-bars i { animation: none; height: 9px; } }
-
-/* khung YouTube nổi (Phát chung) */
-.yt-dock { position: fixed; z-index: 35; left: 12px; bottom: 300px; width: 320px; display: none; flex-direction: column;
-  border-radius: 16px; overflow: hidden; background: #1e120a; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 2px solid rgba(232,201,138,.7); }
-.yt-dock[data-show='1'] { display: flex; }
-.yt-dock[data-size='large'] { width: min(640px, 60vw); }
-.yt-bar { display: flex; align-items: center; gap: 6px; padding: 4px 8px; color: #f3dfb4; font: 600 12px 'Be Vietnam Pro', sans-serif; }
-.yt-title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.yt-size { border: 0; background: rgba(255,255,255,.15); color: #f3dfb4; border-radius: 999px; width: 24px; height: 24px; cursor: pointer; }
-.yt-frame { position: relative; aspect-ratio: 16 / 9; }
-.yt-frame > * { position: absolute; inset: 0; width: 100%; height: 100%; }
-@media (max-width: 767px) {
-  .yt-dock { left: 10px; top: 128px; bottom: auto; width: 200px; }
-  .yt-dock[data-size='large'] { width: calc(100vw - 20px); }
-}

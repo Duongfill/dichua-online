@@ -98,7 +98,7 @@ function YoutubeLink({ admin }: { admin: boolean }) {
         <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=…" className="min-w-0 flex-1 rounded-xl border border-white/60 bg-white/70 px-3 py-1.5 text-sm" />
         <button className="btn-primary px-3 py-1.5 text-sm" disabled={!url.trim() || busy}>{busy ? '…' : 'Thêm'}</button>
       </div>
-      <p className="text-[11px] text-amberwood-800/60">Phát bằng trình phát YouTube chính thức (khung video hiện trên màn hình, có thể có quảng cáo). Video bị chủ kênh tắt nhúng sẽ không thêm được.</p>
+      <p className="text-[11px] text-amberwood-800/60">Phát bằng trình phát YouTube chính thức ngay trên màn hình lớn ngoài sân và trong chánh điện (có thể có quảng cáo). Video bị chủ kênh tắt nhúng sẽ không thêm được.</p>
     </form>
   );
 }
