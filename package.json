@@ -14,7 +14,8 @@
     "voice": "node scripts/voice.mjs",
     "build": "npm run build -w client",
     "start": "npm start -w server",
-    "typecheck": "tsc -p server --noEmit && tsc -p client --noEmit"
+    "typecheck": "tsc -p server --noEmit && tsc -p client --noEmit",
+    "test": "tsx shared/test/xiangqi.test.ts"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",

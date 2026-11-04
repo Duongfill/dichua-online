@@ -73,7 +73,7 @@ export default function InteractPrompt({ vertical = false }: { vertical?: boolea
       })}
       {zone && (
         <button
-          onClick={() => changeScene(zone.id === 'hall-door' ? 'hall' : 'courtyard')}
+          onClick={() => (zone.id === 'chess' ? useGame.setState({ chessOpen: true }) : changeScene(zone.id === 'hall-door' ? 'hall' : 'courtyard'))}
           className="fade-enter flex items-center gap-2 rounded-full bg-gradient-to-b from-amberwood-300 to-amberwood-500 py-2 pl-4 pr-2 font-semibold text-amberwood-900 shadow-lg ring-2 ring-white/70 active:scale-95"
         >
           {zone.label}
@@ -91,5 +91,6 @@ export function pressE() {
   if (!seated && st.seatSpot !== null) return st.sit(st.seatSpot);
   if (st.spots.length) return doAction(st.spots[0].action);
   if (seated) return st.stand();
+  if (st.zone?.id === 'chess') return useGame.setState({ chessOpen: true });
   if (st.zone) st.changeScene(st.zone.id === 'hall-door' ? 'hall' : 'courtyard');
 }

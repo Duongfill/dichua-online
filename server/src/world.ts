@@ -5,6 +5,7 @@ import {
   type Anim, type Appearance, type ChatMsg, type PlayerInfo, type PlayerTuple, type SceneId, type Wallet,
 } from '@chua/shared';
 import type { Profile } from './profiles';
+import { ChessTable } from './chess';
 
 export interface ServerPlayer extends PlayerInfo {
   socketId: string;
@@ -29,6 +30,7 @@ export class Channel {
   history: Record<SceneId, ChatMsg[]> = { courtyard: [], hall: [] };
   bellBusyUntil: Record<SceneId, number> = { courtyard: 0, hall: 0 }; // chuông đang ngân
   seats: (string | null)[] = Array(HALL_CAPACITY).fill(null); // 20 bồ đoàn trong chánh điện
+  chess = new ChessTable(); // bàn cờ tướng ở sân chùa
   lastAnnounce = 0; // giới hạn banner hành động
   private seq = 0;
   constructor(public id: number) {}

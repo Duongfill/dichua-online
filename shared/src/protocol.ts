@@ -1,4 +1,5 @@
 import type { ActEvent, ActRes, ActionId } from './actions';
+import type { ChessState, Side } from './xiangqi';
 
 // Giao thức client <-> server (Socket.IO). Giữ gọn để gửi 15 lần/giây.
 
@@ -136,6 +137,7 @@ export interface ServerToClient {
   act: (e: ActEvent) => void;
   'player:update': (p: { id: string; level: number }) => void;
   seats: (s: SeatsState) => void;
+  chess: (s: ChessState) => void;
 }
 
 export interface ClientToServer {
@@ -146,5 +148,10 @@ export interface ClientToServer {
   'seat:sit': (req: { index: number }, ack: (res: SitRes) => void) => void;
   'seat:stand': (ack: (res: Ack) => void) => void;
   'voice:token': (ack: (res: VoiceTokenRes) => void) => void;
+  'chess:sit': (req: { side: Side }, ack: (res: SitRes) => void) => void;
+  'chess:leave': (ack: (res: Ack) => void) => void;
+  'chess:move': (req: { from: number; to: number }, ack: (res: Ack) => void) => void;
+  'chess:resign': (ack: (res: Ack) => void) => void;
+  'chess:rematch': (ack: (res: Ack) => void) => void;
   'scene:change': (req: { scene: SceneId }, ack: (res: SceneRes) => void) => void;
 }

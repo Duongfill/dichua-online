@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import {
-  ACTION_DEFS, DEFAULT_APPEARANCE, HALL_SEATS, INTERACTIONS, TICK_HZ, collide, interactionsAt, sanitizeAppearance,
+  ACTION_DEFS, CHESS_SEATS, COURTYARD, DEFAULT_APPEARANCE, HALL_SEATS, INTERACTIONS, TICK_HZ, collide, interactionsAt, sanitizeAppearance,
   type Ack, type ActionId, type Announce, type Appearance, type ChatMsg, type ChatReq, type Interaction, type MoveTuple,
-  type PlayerInfo, type SceneId, type SeatsState, type Stats, type Wallet, type Zone,
+  type ChessState, type PlayerInfo, type SceneId, type SeatsState, type Side, type Stats, type Wallet, type Zone,
 } from '@chua/shared';
 import { activeActions, emitFx } from '../game/fx';
-import { chime } from '../game/sfx';
+import { chime, smallBell, woodBlock } from '../game/sfx';
 import { socket, resetClock } from '../net/socket';
 import { clearBuffers, pushSnapshot, removeBuffer } from '../net/interp';
 import { local } from '../game/local';
@@ -73,6 +73,10 @@ interface GameState {
   zen: boolean; // Tịnh tâm: ẩn chat, tắt voice
   selected: string | null; // người chơi đang xem thẻ
 
+  // cờ tướng ở sân chùa
+  chess: ChessState | null;
+  chessOpen: boolean;
+
   setProfile: (p: Profile) => void;
   enter: () => Promise<void>;
   changeScene: (to: SceneId) => Promise<void>;
@@ -91,6 +95,10 @@ interface GameState {
   setSeatSpot: (i: number | null) => void;
   toggleMute: (id: string) => void;
   setZen: (on: boolean) => void;
+  chessSit: (side: Side) => Promise<void>;
+  chessLeave: () => void;
+  chessMove: (from: number, to: number) => Promise<boolean>;
+  chessCmd: (cmd: 'chess:resign' | 'chess:rematch') => Promise<void>;
 }
 
 const load = <T,>(key: string, fallback: T): T => {
@@ -164,6 +172,8 @@ export const useGame = create<GameState>((set, get) => ({
   muted: {},
   zen: false,
   selected: null,
+  chess: null,
+  chessOpen: false,
 
   setProfile: (profile) => {
     set({ profile });
@@ -188,8 +198,8 @@ export const useGame = create<GameState>((set, get) => ({
     }
     await new Promise((r) => setTimeout(r, 250)); // để lớp mờ kịp hiện
     clearBuffers();
-    Object.assign(local, res.pose, { target: null, walking: false, dirty: true, seat: null, pending: null });
-    set({ scene: res.scene, players: toMap(res.players, get().self?.id), zone: null, messages: res.history, bubbles: {} });
+    Object.assign(local, res.pose, { target: null, walking: false, dirty: true, seat: null, pending: null, chessSide: null });
+    set({ scene: res.scene, players: toMap(res.players, get().self?.id), zone: null, messages: res.history, bubbles: {}, chessOpen: false });
     setTimeout(() => set({ transitioning: false }), 120);
   },
 
@@ -318,6 +328,42 @@ export const useGame = create<GameState>((set, get) => ({
     get().toast(zen ? 'Đang Tịnh tâm: đã ẩn trò chuyện và tắt giọng nói 🪷' : 'Đã thoát Tịnh tâm');
   },
 
+  chessSit: async (side) => {
+    const st = get();
+    if (st.scene !== 'courtyard') return;
+    const seat = CHESS_SEATS[side];
+    if (Math.hypot(local.x - COURTYARD.chess.x, local.z - COURTYARD.chess.z) > 3) {
+      // tự đi tới ghế rồi ngồi
+      local.target = { x: seat.x, z: seat.z };
+      local.pending = { chess: side };
+      return st.toast('Đang đi tới bàn cờ…');
+    }
+    const res = await socket.timeout(5000).emitWithAck('chess:sit', { side }).catch(() => null);
+    if (!res || !res.ok) return get().toast(res && !res.ok ? res.error : 'Mất kết nối, xin thử lại.', 'warn');
+    local.pending = null;
+    Object.assign(local, { x: res.pose.x, z: res.pose.z, ry: res.pose.ry, faceRy: res.pose.ry, chessSide: side, target: null, walking: false, dirty: true });
+  },
+
+  chessLeave: () => {
+    local.chessSide = null;
+    local.dirty = true;
+    socket.emit('chess:leave', () => {});
+  },
+
+  chessMove: async (from, to) => {
+    const res = await socket.timeout(5000).emitWithAck('chess:move', { from, to }).catch(() => null);
+    if (!res || !res.ok) {
+      get().toast(res && !res.ok ? res.error : 'Mất kết nối, xin thử lại.', 'warn');
+      return false;
+    }
+    return true;
+  },
+
+  chessCmd: async (cmd) => {
+    const res = await socket.timeout(5000).emitWithAck(cmd).catch(() => null);
+    if (res && !res.ok) get().toast(res.error, 'warn');
+  },
+
   banner: (a) => {
     const id = ++seq;
     set((s) => ({ banners: [...s.banners.slice(-2), { ...a, id }] }));
@@ -351,7 +397,7 @@ async function hello(resume: boolean) {
   }
   clearBuffers();
   const { self } = res;
-  Object.assign(local, { x: self.x, z: self.z, ry: self.ry, target: null, walking: false, dirty: true, seat: null, pending: null });
+  Object.assign(local, { x: self.x, z: self.z, ry: self.ry, target: null, walking: false, dirty: true, seat: null, pending: null, chessSide: null });
   useGame.setState({
     phase: 'playing',
     self: { id: self.id, name: self.name, level: self.level, appearance: self.appearance, scene: self.scene },
@@ -399,6 +445,24 @@ socket.on('act', (e) => {
     local.faceRy = e.ry;
     local.target = null;
   }
+});
+socket.on('chess', (chess) => {
+  const st = useGame.getState();
+  const prev = st.chess;
+  const me = st.self?.id;
+  const mySide: Side | null = chess.red?.id === me ? 'r' : chess.black?.id === me ? 'b' : null;
+  if (local.chessSide && !mySide) local.chessSide = null; // bị rời bàn (đổi khu vực, …)
+  if (mySide) local.chessSide = mySide;
+  // tiếng quân gõ xuống bàn đá / chiếu tướng (to nhỏ theo khoảng cách)
+  if (prev && chess.last && chess.moveNo !== prev.moveNo) {
+    const d = Math.hypot(local.x - COURTYARD.chess.x, local.z - COURTYARD.chess.z);
+    const v = st.chessOpen ? 1 : Math.max(0, 1 - d / 15);
+    if (v > 0.05) {
+      woodBlock(v * 0.7);
+      if (chess.check) setTimeout(() => smallBell(v * 0.6), 120);
+    }
+  }
+  useGame.setState({ chess });
 });
 socket.on('seats', (seats) => {
   const selfId = useGame.getState().self?.id;

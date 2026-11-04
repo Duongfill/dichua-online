@@ -4,8 +4,8 @@ import path from 'node:path';
 import express from 'express';
 import { Server } from 'socket.io';
 import {
-  ACTION_DEFS, CHAT_MAX, HALL_SEATS, QUICK_CHATS, SCENE_NAMES, SEAT_RY, TICK_HZ, collide, interactionsAt, sanitizeAppearance,
-  type ActionId, type ChatMsg, type ClientToServer, type SceneId, type ServerToClient, type Stats,
+  ACTION_DEFS, CHAT_MAX, CHESS_SEATS, COURTYARD, HALL_SEATS, QUICK_CHATS, SCENE_NAMES, SEAT_RY, TICK_HZ, collide, interactionsAt, sanitizeAppearance,
+  type ActionId, type ChatMsg, type Side, type ClientToServer, type SceneId, type ServerToClient, type Stats,
 } from '@chua/shared';
 import { getProfile, grant } from './profiles';
 import { config, voiceEnabled } from './config';
@@ -41,6 +41,24 @@ function areaChat(chId: number, scene: SceneId, m: Omit<ChatMsg, 'id' | 'ts'>) {
   io.to(roomOf(chId, scene)).emit('chat', ch.pushChat(scene, m));
 }
 const system = (chId: number, scene: SceneId, text: string) => areaChat(chId, scene, { kind: 'system', text });
+
+const sendChess = (chId: number) => {
+  const ch = world.channels.get(chId);
+  if (ch) io.to(roomOf(chId, 'courtyard')).emit('chess', ch.chess.state);
+};
+/** Rời bàn cờ (nếu đang ngồi). Giữa ván → thua; báo cho cả sân. */
+function leaveChess(p: ServerPlayer) {
+  const ch = world.channels.get(p.channel);
+  if (!ch || !ch.chess.seatOf(p.id)) return;
+  const msg = ch.chess.leave(p.id);
+  if (p.anim === 2 && p.seat === null) p.anim = 0;
+  ch.dirty.courtyard = true;
+  if (msg) {
+    system(ch.id, 'courtyard', msg);
+    io.to(`ch:${ch.id}`).emit('announce', { kind: 'event', text: msg });
+  }
+  sendChess(ch.id);
+}
 
 const isScene = (s: unknown): s is SceneId => s === 'courtyard' || s === 'hall';
 const finite = (...v: unknown[]) => v.every((n) => typeof n === 'number' && Number.isFinite(n));
@@ -84,6 +102,7 @@ io.on('connection', (socket) => {
       serverTime: Date.now(),
     });
     if (scene === 'hall') socket.emit('seats', ch.seats);
+    else socket.emit('chess', ch.chess.state);
     sendStats(ch.id);
     console.log(`[join] ${name} → kênh ${ch.id}/${scene}. Online ${world.online()}`);
   });
@@ -100,6 +119,7 @@ io.on('connection', (socket) => {
     if (++p.moveCount > 30) return;
     if (now < p.busyUntil) return; // đang lạy / thắp hương… thì đứng yên
     if (p.seat !== null) return; // đang ngồi bồ đoàn → phải đứng dậy trước
+    if (p.scene === 'courtyard' && world.channels.get(p.channel)?.chess.seatOf(p.id)) return; // đang ngồi bàn cờ
     world.applyMove(p, m[0], m[1], m[2], m[3] === 1 ? 1 : 0);
   });
 
@@ -113,6 +133,7 @@ io.on('connection', (socket) => {
     if (to === 'hall' && world.hallFull(ch)) return ack({ ok: false, error: 'Chánh điện kênh này đã đủ 20 người. Xin đợi giây lát.' });
 
     const from = p.scene;
+    if (from === 'courtyard') leaveChess(p);
     if (world.freeSeat(p)) io.to(roomOf(ch.id, from)).emit('seats', ch.seats);
     socket.to(roomOf(ch.id, from)).emit('player:leave', { id: p.id });
     socket.leave(roomOf(ch.id, from));
@@ -128,6 +149,7 @@ io.on('connection', (socket) => {
     system(ch.id, to, to === 'hall' ? `${p.name} đã vào chánh điện` : `${p.name} đã ra sân chùa`);
     ack({ ok: true, scene: to, pose, players: ch.list(to), history: ch.history[to] });
     if (to === 'hall') socket.emit('seats', ch.seats);
+    else socket.emit('chess', ch.chess.state);
     sendStats(ch.id);
   });
 
@@ -226,6 +248,74 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ---------- Cờ tướng ở sân chùa ----------
+  socket.on('chess:sit', (req, ack) => {
+    if (typeof ack !== 'function') return;
+    const p = socket.data.player;
+    if (!p) return ack({ ok: false, error: 'Bạn chưa vào chùa.' });
+    if (p.scene !== 'courtyard') return ack({ ok: false, error: 'Bàn cờ ở ngoài sân chùa.' });
+    const side = req?.side as Side;
+    if (side !== 'r' && side !== 'b') return ack({ ok: false, error: 'Chọn quân Đỏ hoặc Đen.' });
+    if (Date.now() < p.busyUntil) return ack({ ok: false, error: 'Xin chờ nghi thức xong.' });
+    if (Math.hypot(p.x - COURTYARD.chess.x, p.z - COURTYARD.chess.z) > 3.2) return ack({ ok: false, error: 'Hãy lại gần bàn cờ hơn.' });
+    const ch = world.channels.get(p.channel)!;
+    const err = ch.chess.sit(p.id, p.name, side);
+    if (err) return ack({ ok: false, error: err });
+    const s = CHESS_SEATS[side];
+    Object.assign(p, { x: s.x, z: s.z, ry: s.ry, anim: 2 });
+    ch.dirty.courtyard = true;
+    if (ch.chess.state.status === 'playing' && ch.chess.state.moveNo === 0) {
+      system(ch.id, 'courtyard', `♟ Ván cờ mới: ${ch.chess.state.red?.name} (Đỏ) – ${ch.chess.state.black?.name} (Đen)`);
+    }
+    sendChess(ch.id);
+    ack({ ok: true, pose: { x: s.x, z: s.z, ry: s.ry } });
+  });
+
+  socket.on('chess:leave', (ack) => {
+    const p = socket.data.player;
+    if (p) leaveChess(p);
+    if (typeof ack === 'function') ack({ ok: true });
+  });
+
+  socket.on('chess:move', (req, ack) => {
+    if (typeof ack !== 'function') return;
+    const p = socket.data.player;
+    if (!p) return ack({ ok: false, error: 'Bạn chưa vào chùa.' });
+    const ch = world.channels.get(p.channel)!;
+    const r = ch.chess.move(p.id, req?.from, req?.to);
+    if (r.error) return ack({ ok: false, error: r.error });
+    sendChess(ch.id);
+    if (r.ended) {
+      system(ch.id, 'courtyard', r.ended);
+      io.to(`ch:${ch.id}`).emit('announce', { kind: 'event', text: r.ended });
+    }
+    ack({ ok: true });
+  });
+
+  socket.on('chess:resign', (ack) => {
+    const p = socket.data.player;
+    const ch = p && world.channels.get(p.channel);
+    const msg = ch ? ch.chess.resign(p.id) : null;
+    if (ch && msg) {
+      system(ch.id, 'courtyard', msg);
+      io.to(`ch:${ch.id}`).emit('announce', { kind: 'event', text: msg });
+      sendChess(ch.id);
+    }
+    if (typeof ack === 'function') ack(msg ? { ok: true } : { ok: false, error: 'Không có ván cờ nào để xin thua.' });
+  });
+
+  socket.on('chess:rematch', (ack) => {
+    const p = socket.data.player;
+    const ch = p && world.channels.get(p.channel);
+    if (!p || !ch) return typeof ack === 'function' && ack({ ok: false, error: 'Bạn chưa vào chùa.' });
+    const err = ch.chess.rematch(p.id);
+    if (!err && ch.chess.state.status === 'playing') {
+      system(ch.id, 'courtyard', `♟ Ván cờ mới: ${ch.chess.state.red?.name} (Đỏ) – ${ch.chess.state.black?.name} (Đen)`);
+    }
+    sendChess(ch.id);
+    if (typeof ack === 'function') ack(err ? { ok: false, error: err } : { ok: true });
+  });
+
   socket.on('chat:send', (req, ack) => {
     if (typeof ack !== 'function') return;
     const p = socket.data.player;
@@ -250,6 +340,7 @@ io.on('connection', (socket) => {
     if (!p) return;
     io.to(roomOf(p.channel, p.scene)).emit('player:leave', { id: p.id });
     system(p.channel, p.scene, `${p.name} đã rời chùa`);
+    leaveChess(p);
     limiter.forget(p.id);
     const wasSeated = p.seat !== null;
     world.removePlayer(p);

@@ -18,6 +18,8 @@ function useTag(id: string | undefined) {
   return { showTag, bubble, speaking, mutedByMe };
 }
 
+const lastChessHint = { t: 0 };
+
 const lerpAngle = (a: number, b: number, f: number) => {
   let d = (b - a) % (Math.PI * 2);
   if (d > Math.PI) d -= Math.PI * 2;
@@ -41,6 +43,15 @@ export function LocalPlayer() {
     const busy = performance.now() < local.busyUntil;
     let ix = busy ? 0 : input.right - input.left + input.joyX;
     let iy = busy ? 0 : input.fwd - input.back + input.joyY;
+    if (local.chessSide && !busy) {
+      // đang ngồi bàn cờ: không tự đứng dậy khi lỡ chạm điều khiển (rời bàn giữa ván = thua)
+      if (Math.hypot(ix, iy) > 0.08 && performance.now() - lastChessHint.t > 4000) {
+        lastChessHint.t = performance.now();
+        useGame.getState().toast('Đang ngồi bàn cờ – mở bàn cờ và bấm "Rời bàn" để đứng dậy.');
+      }
+      ix = iy = 0;
+      local.ry = lerpAngle(local.ry, local.faceRy, Math.min(1, dt * 8));
+    }
     if (local.seat !== null && !busy) {
       // đang ngồi: điều khiển → đứng dậy rồi đi; không thì ngồi yên quay về bàn thờ
       if (Math.hypot(ix, iy) > 0.08) useGame.getState().stand();
@@ -116,7 +127,7 @@ export function LocalPlayer() {
       local.dirty = true;
     }
     motion.current.walking = walking;
-    motion.current.sitting = local.seat !== null;
+    motion.current.sitting = local.seat !== null || local.chessSide !== null;
     const act = currentAction(self.id);
     motion.current.action = act?.action ?? null;
     motion.current.actionStart = act?.start;
@@ -134,7 +145,12 @@ export function LocalPlayer() {
     // đã tự đi tới nơi → làm việc đang chờ (nghi thức hoặc ngồi)
     const pend = local.pending;
     if (pend && !busy) {
-      if ('sit' in pend) {
+      if ('chess' in pend) {
+        if (!local.target) {
+          local.pending = null;
+          st.chessSit(pend.chess);
+        }
+      } else if ('sit' in pend) {
         if (!local.target) {
           local.pending = null;
           if (seatAt(local.x, local.z, 1.2) === pend.sit) st.sit(pend.sit);

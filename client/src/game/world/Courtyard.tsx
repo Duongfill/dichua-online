@@ -4,6 +4,7 @@ import { Sky } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { COURTYARD } from '@chua/shared';
 import { brickTexture } from './textures';
+import ChessTable from './ChessTable';
 import {
   BellPavilion, BigTree, Bonsai, C, Column, FlagString, IncenseBurner, LanternPost, LotusPond, Plaque, Roof,
 } from './props';
@@ -167,6 +168,7 @@ export default function Courtyard({ onGround }: { onGround: (e: ThreeEvent<Mouse
       <IncenseBurner position={[COURTYARD.incense.x, 0, COURTYARD.incense.z]} />
       <LotusPond position={[COURTYARD.pond.x, 0, COURTYARD.pond.z]} r={COURTYARD.pond.r} />
       <BellPavilion position={[COURTYARD.bell.x, 0, COURTYARD.bell.z]} />
+      <ChessTable />
       {COURTYARD.bonsai.map(([x, z], i) => (
         <Bonsai key={i} position={[x, 0, z]} seed={i + 1} />
       ))}

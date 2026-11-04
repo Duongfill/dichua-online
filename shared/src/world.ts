@@ -5,7 +5,7 @@ import type { Pose, SceneId } from './protocol';
 export interface Bounds { minX: number; maxX: number; minZ: number; maxZ: number }
 export interface Circle { x: number; z: number; r: number }
 export interface Box { x: number; z: number; hw: number; hd: number }
-export interface Zone { id: 'hall-door' | 'hall-exit'; x: number; z: number; r: number; label: string; key: string }
+export interface Zone { id: 'hall-door' | 'hall-exit' | 'chess'; x: number; z: number; r: number; label: string; key: string }
 
 export const PLAYER_RADIUS = 0.35;
 
@@ -30,6 +30,8 @@ export const COURTYARD = {
   lanternPoles: [
     [-3.5, 16], [3.5, 16], [-3.5, 10], [3.5, 10], [-3.5, 4], [3.5, 4],
   ] as [number, number][],
+  /** bàn cờ tướng bằng đá dưới gốc cây cổ thụ (góc tây nam, gần cổng) */
+  chess: { x: -15.5, z: 17 },
 };
 
 // ---- Chánh điện: 20 bồ đoàn, 4 hàng × 5 ----
@@ -53,6 +55,7 @@ export const COLLIDERS: Record<SceneId, { circles: Circle[]; boxes: Box[] }> = {
       ...COURTYARD.bigTrees.map(([x, z]) => ({ x, z, r: 1.1 })),
       ...COURTYARD.lanternPoles.map(([x, z]) => ({ x, z, r: 0.22 })),
       { x: -3.4, z: COURTYARD.gate.z, r: 0.6 },
+      { x: COURTYARD.chess.x, z: COURTYARD.chess.z, r: 0.65 }, // bàn đá (ghế đá không cản)
       { x: 3.4, z: COURTYARD.gate.z, r: 0.6 },
     ],
     boxes: [
@@ -66,7 +69,10 @@ export const COLLIDERS: Record<SceneId, { circles: Circle[]; boxes: Box[] }> = {
 };
 
 export const ZONES: Record<SceneId, Zone[]> = {
-  courtyard: [{ id: 'hall-door', x: 0, z: -9.3, r: 2.4, label: 'Vào chánh điện', key: 'E' }],
+  courtyard: [
+    { id: 'hall-door', x: 0, z: -9.3, r: 2.4, label: 'Vào chánh điện', key: 'E' },
+    { id: 'chess', x: COURTYARD.chess.x, z: COURTYARD.chess.z, r: 2.6, label: 'Bàn cờ tướng', key: 'E' },
+  ],
   hall: [{ id: 'hall-exit', x: 0, z: 8.2, r: 1.6, label: 'Ra sân chùa', key: 'E' }],
 };
 
@@ -134,3 +140,11 @@ export function seatAt(x: number, z: number, reach = SEAT_REACH): number {
   });
   return best;
 }
+
+// ---------- Bàn cờ tướng ----------
+export const CHESS_STOOL_DIST = 1.15;
+/** Ghế Đỏ ở phía nam bàn (nhìn về bắc), ghế Đen ở phía bắc (nhìn về nam). */
+export const CHESS_SEATS = {
+  r: { x: COURTYARD.chess.x, z: COURTYARD.chess.z + CHESS_STOOL_DIST, ry: Math.PI },
+  b: { x: COURTYARD.chess.x, z: COURTYARD.chess.z - CHESS_STOOL_DIST, ry: 0 },
+} as const;

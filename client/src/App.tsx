@@ -16,8 +16,8 @@ export default function App() {
   useEffect(
     () =>
       bindKeyboard((code) => {
-        const { phase: p, panel, setChatOpen } = useGame.getState();
-        if (p !== 'playing' || panel) return;
+        const { phase: p, panel, setChatOpen, chessOpen } = useGame.getState();
+        if (p !== 'playing' || panel || chessOpen) return;
         if (code === 'KeyE') pressE();
         if (code === 'Enter' || code === 'NumpadEnter') {
           // Enter → gõ chat (điện thoại mở bảng chat trước)

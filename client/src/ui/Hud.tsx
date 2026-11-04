@@ -10,6 +10,7 @@ import BottomNav from './hud/BottomNav';
 import { ChatButton, ChatPanel, ChatPreview, ChatSheet } from './hud/ChatBox';
 import { PlayerCard, TopRight } from './hud/Corners';
 import Panels from './hud/Panels';
+import ChessPanel from './hud/Chess';
 import InteractPrompt from './hud/Interact';
 import { AudioUnlock, MicButton, PlayerPopover, ZenButton } from './hud/Voice';
 
@@ -98,6 +99,7 @@ export default function Hud() {
       )}
 
       <Panels />
+      <ChessPanel />
     </div>
   );
 }

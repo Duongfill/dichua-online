@@ -75,6 +75,14 @@ chua3d/
 - Tạo lại / đổi giai điệu: `node scripts/gen-bgm.mjs` (cần ffmpeg; đổi `seed` trong file). Muốn dùng **nhạc thật**: thay 2 file mp3 cùng tên – nhớ chỉ dùng bản bạn có quyền sử dụng.
 - iPhone đang bật **gạt im lặng** thì Web Audio không phát tiếng (giới hạn của iOS).
 
+**Cờ tướng ngoài sân chùa**
+- Bàn cờ đá dưới gốc cây cổ thụ (góc tây nam sân, gần cổng), 2 ghế đá. Quân cờ 3D trên mặt bàn cập nhật theo ván đang đánh – ai đi ngang cũng thấy.
+- Lại gần bàn → nút **"Bàn cờ tướng [E]"** (hoặc bấm vào bàn đá) mở bàn cờ lớn: ngồi cầm quân **Đỏ** hoặc **Đen**; đủ 2 người là ván tự bắt đầu, Đỏ đi trước. Người khác mở ra để **xem**.
+- Chạm quân để chọn → chấm xanh gợi ý nước hợp lệ → chạm ô đích. Cầm Đen thì bàn tự xoay cho quân mình ở dưới. Đổi chữ trên quân: **chữ Hán** (帥 仕 相 傌 俥 炮 兵) / **chữ Việt** (Tg S T M X P B).
+- **Luật đầy đủ, server kiểm tra từng nước** (`shared/src/xiangqi.ts`, dùng chung với client): tướng/sĩ trong cung, tượng không qua sông & bị cản mắt, mã bị cản chân, pháo ăn qua đúng 1 ngòi, tốt qua sông đi ngang, **lộ mặt tướng**, cấm tự để tướng bị chiếu; bị chiếu bí hoặc hết nước đều thua; quá 300 nước xử hòa.
+- **Xin thua**, **Ván mới**, **Rời bàn** (rời bàn / đổi khu vực / mất kết nối giữa ván = thua). Đang ngồi bàn cờ thì nhân vật ngồi yên trên ghế đá (không lỡ tay đi mất). Kết quả được báo trong chat sân chùa + banner cả kênh; tiếng quân gõ xuống bàn đá, tiếng khánh khi chiếu tướng.
+- Kiểm thử luật: `npm test` (18 trường hợp, gồm thế khai cuộc đúng 44 nước hợp lệ).
+
 **Kênh**: mỗi kênh tối đa 50 người. Kênh đầy thì tự mở kênh mới; kênh trống (trừ kênh 1) tự đóng. Chánh điện mỗi kênh tối đa 20 người.
 
 ## Chạy local

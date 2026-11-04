@@ -66,6 +66,8 @@ function drawStatic(ctx: CanvasRenderingContext2D, scene: SceneId, size: number,
     label(COURTYARD.bell.x, COURTYARD.bell.z + 3.6, 'Lầu chuông');
     label(COURTYARD.incense.x, COURTYARD.incense.z + 2.8, 'Đỉnh hương');
     label(0, 22.4, 'Cổng tam quan');
+    circle(COURTYARD.chess.x, COURTYARD.chess.z, 0.9, '#8f8270');
+    label(COURTYARD.chess.x, COURTYARD.chess.z - 1.6, 'Cờ tướng');
   } else {
     ctx.fillStyle = '#2a1a10';
     ctx.fillRect(0, 0, size, size);

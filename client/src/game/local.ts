@@ -12,7 +12,9 @@ export const local = {
   busyUntil: 0,
   faceRy: 0,
   /** bấm nút hành động khi ở xa → tự đi tới rồi làm */
-  pending: null as null | { action: import('@chua/shared').ActionId } | { sit: number },
+  pending: null as null | { action: import('@chua/shared').ActionId } | { sit: number } | { chess: import('@chua/shared').Side },
+  /** đang ngồi bàn cờ tướng, cầm quân bên nào */
+  chessSide: null as null | import('@chua/shared').Side,
   /** đang ngồi bồ đoàn số mấy */
   seat: null as number | null,
 };
@@ -68,3 +70,5 @@ export function bindKeyboard(onAction: (code: string) => void) {
     window.removeEventListener('blur', blur);
   };
 }
+
+if (import.meta.env.DEV) (window as unknown as { __cam: typeof cam }).__cam = cam; // chỉ để debug
