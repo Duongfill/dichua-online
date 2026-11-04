@@ -166,7 +166,22 @@ npm start
 ```
 
 Server phục vụ luôn `client/dist`, nên chỉ cần **một service Node** chạy **một instance** (trạng thái kênh nằm trong RAM).
-- **Render / Railway**: Root directory `chua3d`; Build `npm install && npm run build`; Start `npm start`.
+### Đưa lên mạng cho mọi người (GitHub + Render + LiveKit Cloud, đều có gói miễn phí)
+
+1. **GitHub**: tạo repo mới (github.com → New repository, ví dụ `chua-online`, *không* tick "Add README"). Trong `chua3d/` chạy:
+   ```bash
+   git remote add origin https://github.com/<tên-bạn>/chua-online.git
+   git push -u origin main
+   ```
+   Lần đầu Windows sẽ mở trình duyệt để đăng nhập GitHub.
+2. **LiveKit Cloud** (voice): đăng ký cloud.livekit.io → tạo project → **Settings → Keys** → tạo key. Ghi lại *WebSocket URL* (`wss://….livekit.cloud`), *API Key*, *API Secret*.
+3. **Render**: đăng ký render.com bằng tài khoản GitHub → **New → Blueprint** → chọn repo → Render đọc `render.yaml` và hỏi 3 biến `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` → dán giá trị từ bước 2 → **Apply**.
+4. Đợi build ~3–5 phút, Render cấp link cố định dạng `https://chua-online.onrender.com` (có HTTPS sẵn, dùng được micro trên điện thoại). Gửi link đó cho mọi người.
+5. Sửa code sau này: `git add -A && git commit -m "..." && git push` → Render tự deploy lại.
+
+Lưu ý gói free của Render: không ai vào ~15 phút thì server "ngủ", người đầu tiên vào lại phải chờ ~1 phút; mỗi lần ngủ/deploy lại thì **công đức, cấp, lịch sử chat bị xoá** (đang lưu RAM – giai đoạn 6 sẽ thêm database). Gói trả phí rẻ nhất của Render không ngủ.
+
+- **Railway**: Root directory `chua3d`; Build `npm ci --include=dev && npm run build`; Start `npm start`; đặt 3 biến `LIVEKIT_*`.
 - **Fly.io**: `fly launch` trong `chua3d/`, `internal_port = 3180` (hoặc đặt `PORT`), `fly scale count 1`.
 - **HTTPS là bắt buộc** cho voice. Các nền tảng trên đều cấp HTTPS sẵn.
 - **LiveKit khi deploy**: dễ nhất là LiveKit Cloud (đặt 3 biến `LIVEKIT_*`). Tự host thì chạy `livekit-server` trên VPS có IP công khai, mở cổng 7880 (sau reverse proxy TLS → `wss://`), 7881/tcp và dải UDP; bật TURN tích hợp của LiveKit cho mạng 4G/công ty. Xem tài liệu "self-hosting" của LiveKit.
