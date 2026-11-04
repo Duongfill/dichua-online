@@ -83,6 +83,8 @@ chua3d/
 - **Xin thua**, **Ván mới**, **Rời bàn** (rời bàn / đổi khu vực / mất kết nối giữa ván = thua). Đang ngồi bàn cờ thì nhân vật ngồi yên trên ghế đá (không lỡ tay đi mất). Kết quả được báo trong chat sân chùa + banner cả kênh; tiếng quân gõ xuống bàn đá, tiếng khánh khi chiếu tướng.
 - Kiểm thử luật: `npm test` (18 trường hợp, gồm thế khai cuộc đúng 44 nước hợp lệ).
 
+**Trang phục** – khi vào chùa chọn *Phật tử* (áo tràng), *Sư thầy* (áo dài, cạo tóc, tràng hạt) hoặc *Sư cô* (áo dài, mũ ni, tràng hạt). Ai đăng nhập mật khẩu Điều phối (`ADMIN_PASSWORD`) sẽ tự mặc áo **Trụ trì** màu vàng có cà sa, kèm nhãn "Trụ trì" trên tên – mọi người đều thấy.
+
 **Phát chung (giai đoạn 5)** – bảng *Phát chung* (Cài đặt → 🎵, hoặc chạm dòng "♪ Đang phát" giữa màn hình)
 - **Tải lên** mp3/wav/m4a/ogg/mp4/webm ≤ 50 MB/file, kho ≤ 500 MB; phải tick cam kết **có quyền sử dụng**. Server **chuyển mã bằng ffmpeg** (`ffmpeg-static`, không cần cài): mp3 128k; video thêm mp4 480p để **chiếu lên màn hình tường trái chánh điện**. File không giải mã được bị loại. Tên file gốc không dùng làm đường dẫn.
 - **Phân quyền**: *Điều phối/Admin* đăng nhập bằng `ADMIN_PASSWORD` (dev mặc định `admin`) → phát/tạm dừng/tua/bài trước–sau, chế độ 🔁 lặp danh sách · 🔂 lặp 1 bài · 🔀 ngẫu nhiên, sắp xếp/xoá hàng chờ, duyệt/từ chối, xoá bài. *Người thường* tải lên = **đề xuất** chờ duyệt; có nút 🚩 báo cáo (3 người báo cáo → gỡ chờ duyệt lại).

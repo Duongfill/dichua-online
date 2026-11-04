@@ -40,6 +40,15 @@ const G = {
   shadow: new THREE.CircleGeometry(0.42, 20),
   stick: new THREE.CylinderGeometry(0.012, 0.012, 0.42, 4),
   ember: new THREE.SphereGeometry(0.02, 6, 4),
+  // trang phục tu sĩ
+  robeLong: new THREE.CylinderGeometry(0.27, 0.48, 0.95, 18),
+  mala: new THREE.TorusGeometry(0.36, 0.024, 6, 32),
+  bead: new THREE.SphereGeometry(0.045, 10, 8),
+  nunCap: new THREE.SphereGeometry(0.46, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.5),
+  nunFlap: new THREE.CylinderGeometry(0.4, 0.46, 0.34, 20, 1, true, Math.PI * 0.5, Math.PI),
+  kasaya: new THREE.CylinderGeometry(0.315, 0.415, 0.5, 22, 1, true, -Math.PI * 0.15, Math.PI * 1.4),
+  kasayaStrap: new THREE.TorusGeometry(0.36, 0.06, 6, 28),
+  kasayaRing: new THREE.TorusGeometry(0.03, 0.01, 6, 12),
 };
 const M = {
   skin: mat(SKIN),
@@ -50,12 +59,18 @@ const M = {
   belt: mat('#5a3a22'),
   stick: mat('#b8442c'),
   ember: new THREE.MeshBasicMaterial({ color: '#ff8a3a' }),
+  mala: mat('#4a2c1a', { roughness: 0.5 }),
+  abbotRobe: mat('#e0ad3e', { roughness: 0.7 }),
+  kasaya: mat('#b4432a', { roughness: 0.8, side: THREE.DoubleSide }),
+  gold: mat('#e9c25a', { metalness: 0.5, roughness: 0.35 }),
 };
 const robeMats = ROBE_COLORS.map((c) => mat(c.value));
 const hairMats = HAIR_COLORS.map((c) => mat(c, { roughness: 0.6 }));
 
 interface Props {
   appearance: Appearance;
+  /** Trụ trì (đăng nhập Điều phối): áo vàng + cà sa */
+  abbot?: boolean;
   name?: string;
   level?: number;
   isSelf?: boolean;
@@ -69,7 +84,7 @@ interface Props {
   mutedByMe?: boolean;
 }
 
-export default function Character({ appearance, name, level = 1, isSelf, motion, showTag = true, bubble, speaking, mutedByMe }: Props) {
+export default function Character({ appearance, abbot, name, level = 1, isSelf, motion, showTag = true, bubble, speaking, mutedByMe }: Props) {
   const body = useRef<THREE.Group>(null);
   const armL = useRef<THREE.Group>(null);
   const armR = useRef<THREE.Group>(null);
@@ -78,7 +93,9 @@ export default function Character({ appearance, name, level = 1, isSelf, motion,
   const incenseProp = useRef<THREE.Group>(null);
   const fishProp = useRef<THREE.Group>(null);
   const anim = useRef<{ phase: number; w: number; sit?: number }>({ phase: Math.random() * 10, w: 0 });
-  const robe = robeMats[appearance.robe] ?? robeMats[0];
+  const outfit = abbot ? 3 : appearance.outfit ?? 0; // 0 Phật tử · 1 Sư thầy · 2 Sư cô · 3 Trụ trì
+  const cleric = outfit > 0;
+  const robe = outfit === 3 ? M.abbotRobe : robeMats[appearance.robe] ?? robeMats[0];
   const hair = hairMats[appearance.hairColor] ?? hairMats[0];
 
   useFrame((_, dt) => {
@@ -144,6 +161,15 @@ export default function Character({ appearance, name, level = 1, isSelf, motion,
   });
 
   const hairParts = useMemo(() => {
+    if (outfit === 1 || outfit === 3) return null; // sư thầy / trụ trì: cạo tóc
+    if (outfit === 2)
+      // sư cô: mũ ni trùm đầu, vạt sau phủ gáy
+      return (
+        <>
+          <mesh geometry={G.nunCap} material={robe} rotation={[-0.55, 0, 0]} castShadow />
+          <mesh geometry={G.nunFlap} material={robe} position={[0, -0.2, -0.04]} castShadow />
+        </>
+      );
     switch (appearance.hair) {
       case 0: // trọc
         return null;
@@ -164,7 +190,7 @@ export default function Character({ appearance, name, level = 1, isSelf, motion,
       default: // tóc ngắn
         return <mesh geometry={G.hairCap} material={hair} rotation={[-0.5, 0, 0]} castShadow />;
     }
-  }, [appearance.hair, hair]);
+  }, [appearance.hair, hair, outfit, robe]);
 
   return (
     <group>
@@ -180,8 +206,31 @@ export default function Character({ appearance, name, level = 1, isSelf, motion,
           <mesh geometry={G.shoe} material={M.shoe} position={[0, -0.24, 0.04]} castShadow />
         </group>
         {/* áo */}
-        <mesh geometry={G.robe} material={robe} position={[0, 0.62, 0]} castShadow />
-        <mesh geometry={G.belt} material={M.belt} position={[0, 0.66, 0]} />
+        {cleric ? (
+          <mesh geometry={G.robeLong} material={robe} position={[0, 0.52, 0]} castShadow />
+        ) : (
+          <>
+            <mesh geometry={G.robe} material={robe} position={[0, 0.62, 0]} castShadow />
+            <mesh geometry={G.belt} material={M.belt} position={[0, 0.66, 0]} />
+          </>
+        )}
+        {outfit === 3 && (
+          // cà sa: tấm vải đỏ nâu quấn thân, để hở một bên, dây vắt chéo qua vai + khoen vàng
+          <group>
+            <mesh geometry={G.kasaya} material={M.kasaya} position={[0, 0.67, 0]} castShadow />
+            <group position={[0, 0.72, 0]} rotation={[0, 0, -0.75]}>
+              <mesh geometry={G.kasayaStrap} material={M.kasaya} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.82, 1]} />
+            </group>
+            <mesh geometry={G.kasayaRing} material={M.gold} position={[-0.17, 0.86, 0.27]} />
+          </group>
+        )}
+        {cleric && (
+          // tràng hạt đeo cổ
+          <group position={[0, 0.9, 0.05]} rotation={[-1.05, 0, 0]}>
+            <mesh geometry={G.mala} material={M.mala} />
+            <mesh geometry={G.bead} material={M.mala} position={[0, -0.37, 0]} />
+          </group>
+        )}
         <mesh geometry={G.collar} material={robe} position={[0, 0.97, 0]} rotation={[Math.PI / 2, 0, 0]} />
         {/* tay */}
         <group ref={armL} position={[-0.33, 0.9, 0]} rotation={[0, 0, 0.18]}>
@@ -227,6 +276,7 @@ export default function Character({ appearance, name, level = 1, isSelf, motion,
                 <span className={`grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] ${isSelf ? 'bg-amberwood-400 text-amberwood-900' : 'bg-jade-500 text-white'}`}>
                   {level}
                 </span>
+                {abbot && <span className="rounded-full bg-amber-300 px-1 text-[9px] font-bold text-amberwood-900">Trụ trì</span>}
                 <span className="max-w-[110px] truncate">{name}</span>
                 {speaking && !mutedByMe && (
                   <span className="speaking-bars ml-0.5 flex h-3 items-end gap-[2px]" aria-label="đang nói">

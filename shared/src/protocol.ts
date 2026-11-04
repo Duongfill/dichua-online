@@ -19,7 +19,11 @@ export interface Appearance {
   hair: number; // chỉ số trong HAIR_STYLES
   hairColor: number; // chỉ số trong HAIR_COLORS
   robe: number; // chỉ số trong ROBE_COLORS
+  outfit: number; // chỉ số trong OUTFITS
 }
+
+/** Trang phục: Phật tử (áo tràng) · Sư thầy (áo dài, cạo tóc, tràng hạt) · Sư cô (áo dài, mũ ni, tràng hạt). Trụ trì (Điều phối) do máy chủ cấp. */
+export const OUTFITS = ['Phật tử', 'Sư thầy', 'Sư cô'] as const;
 
 export const HAIR_STYLES = ['Trọc', 'Tóc ngắn', 'Búi tó', 'Tóc dài'] as const;
 export const HAIR_COLORS = ['#2b2118', '#5b3a22', '#8d8d8d', '#c49a62'] as const;
@@ -32,7 +36,7 @@ export const ROBE_COLORS = [
   { name: 'Trắng', value: '#ece5d8' },
 ] as const;
 
-export const DEFAULT_APPEARANCE: Appearance = { hair: 1, hairColor: 0, robe: 0 };
+export const DEFAULT_APPEARANCE: Appearance = { hair: 1, hairColor: 0, robe: 0, outfit: 0 };
 
 export function sanitizeAppearance(a: Partial<Appearance> | undefined): Appearance {
   const pick = (v: unknown, n: number, d: number) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) < n ? (v as number) : d);
@@ -40,6 +44,7 @@ export function sanitizeAppearance(a: Partial<Appearance> | undefined): Appearan
     hair: pick(a?.hair, HAIR_STYLES.length, DEFAULT_APPEARANCE.hair),
     hairColor: pick(a?.hairColor, HAIR_COLORS.length, DEFAULT_APPEARANCE.hairColor),
     robe: pick(a?.robe, ROBE_COLORS.length, DEFAULT_APPEARANCE.robe),
+    outfit: pick(a?.outfit, OUTFITS.length, DEFAULT_APPEARANCE.outfit),
   };
 }
 
@@ -49,6 +54,8 @@ export interface PlayerInfo {
   level: number;
   appearance: Appearance;
   scene: SceneId;
+  /** đã đăng nhập Điều phối → mặc áo Trụ trì (vàng + cà sa) */
+  abbot?: boolean;
 }
 
 export interface Pose {
@@ -136,7 +143,7 @@ export interface ServerToClient {
   chat: (m: ChatMsg) => void;
   announce: (a: Announce) => void;
   act: (e: ActEvent) => void;
-  'player:update': (p: { id: string; level: number }) => void;
+  'player:update': (p: { id: string; level: number; abbot?: boolean }) => void;
   seats: (s: SeatsState) => void;
   chess: (s: ChessState) => void;
   'stream:lib': (items: MediaItem[]) => void;

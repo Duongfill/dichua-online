@@ -213,7 +213,7 @@ io.on('connection', (socket) => {
       socket.to(`ch:${ch.id}`).emit('announce', { kind: 'event', text: def.announce.replace('{name}', p.name) });
     }
     if (levelUp) {
-      io.to(roomOf(ch.id, p.scene)).emit('player:update', { id: p.id, level: p.level });
+      io.to(roomOf(ch.id, p.scene)).emit('player:update', { id: p.id, level: p.level, abbot: !!p.profile.admin });
       io.to(`ch:${ch.id}`).emit('announce', { kind: 'event', text: `✨ ${p.name} đã lên cấp ${p.level} – ${p.wallet.title}` });
     }
   });
@@ -345,6 +345,7 @@ io.on('connection', (socket) => {
     const b = Buffer.from(config.adminPassword);
     if (a.length !== b.length || !timingSafeEqual(a, b)) return ack({ ok: false, error: 'Sai mật khẩu.' });
     p.profile.admin = true;
+    io.to(roomOf(p.channel, p.scene)).emit('player:update', { id: p.id, level: p.level, abbot: true }); // mặc áo Trụ trì
     console.log(`[admin] ${p.name} đăng nhập quyền Điều phối`);
     ack({ ok: true });
   });

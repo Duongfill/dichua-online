@@ -72,6 +72,7 @@ export const publicInfo = (p: ServerPlayer): PlayerInfo => ({
   level: p.level,
   appearance: p.appearance,
   scene: p.scene,
+  abbot: !!p.profile.admin,
 });
 
 export const roomOf = (ch: number, scene: SceneId) => `ch:${ch}:${scene}`;

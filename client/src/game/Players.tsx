@@ -178,7 +178,7 @@ export function LocalPlayer() {
   return (
     <>
       <group ref={group}>
-        <Character appearance={self.appearance} name={self.name} level={self.level} isSelf motion={motion} {...tag} />
+        <Character appearance={self.appearance} abbot={self.abbot} name={self.name} level={self.level} isSelf motion={motion} {...tag} />
         {floaters.length > 0 && (
           <Html position={[0, 2.9, 0]} center zIndexRange={[21, 0]} className="nametag">
             {floaters.map((f) => (
@@ -233,7 +233,7 @@ function RemotePlayer({ info }: { info: PlayerInfo }) {
         useGame.setState({ selected: info.id });
       }}
     >
-      <Character appearance={info.appearance} name={info.name} level={info.level} motion={motion} {...tag} />
+      <Character appearance={info.appearance} abbot={info.abbot} name={info.name} level={info.level} motion={motion} {...tag} />
     </group>
   );
 }

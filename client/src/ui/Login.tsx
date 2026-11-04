@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { HAIR_COLORS, HAIR_STYLES, ROBE_COLORS, type Appearance } from '@chua/shared';
+import { HAIR_COLORS, HAIR_STYLES, OUTFITS, ROBE_COLORS, type Appearance } from '@chua/shared';
 import Character, { type Motion } from '../game/Character';
 import { useGame } from '../state/store';
 
@@ -76,6 +76,23 @@ export default function Login() {
           </label>
 
           <div>
+            <span className="text-sm font-semibold text-amberwood-900">Trang phục</span>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {OUTFITS.map((o, i) => (
+                <button
+                  type="button"
+                  key={o}
+                  onClick={() => setAp({ ...ap, outfit: i })}
+                  aria-pressed={ap.outfit === i}
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${ap.outfit === i ? 'bg-brick-500 text-amber-50 shadow' : 'bg-white/55 text-amberwood-900 hover:bg-white/80'}`}
+                >
+                  {o}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={ap.outfit ? 'pointer-events-none opacity-40' : ''} title={ap.outfit ? 'Sư thầy cạo tóc · Sư cô đội mũ ni' : undefined}>
             <span className="text-sm font-semibold text-amberwood-900">Kiểu tóc</span>
             <div className="mt-1.5 flex flex-wrap gap-2">
               {HAIR_STYLES.map((h, i) => (

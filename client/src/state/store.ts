@@ -444,7 +444,7 @@ async function hello(resume: boolean) {
   Object.assign(local, { x: self.x, z: self.z, ry: self.ry, target: null, walking: false, dirty: true, seat: null, pending: null, chessSide: null });
   useGame.setState({
     phase: 'playing',
-    self: { id: self.id, name: self.name, level: self.level, appearance: self.appearance, scene: self.scene },
+    self: { id: self.id, name: self.name, level: self.level, appearance: self.appearance, scene: self.scene, abbot: self.abbot },
     wallet: res.wallet,
     scene: self.scene,
     channel: res.channel,
@@ -519,12 +519,12 @@ socket.on('seats', (seats) => {
   if (local.seat !== null && seats[local.seat] !== selfId) local.seat = null;
   useGame.setState({ seats });
 });
-socket.on('player:update', ({ id, level }) =>
+socket.on('player:update', ({ id, level, abbot }) =>
   useGame.setState((st) =>
     st.self?.id === id
-      ? { self: { ...st.self, level } }
+      ? { self: { ...st.self, level, abbot } }
       : st.players[id]
-        ? { players: { ...st.players, [id]: { ...st.players[id], level } } }
+        ? { players: { ...st.players, [id]: { ...st.players[id], level, abbot } } }
         : st,
   ),
 );
