@@ -66,6 +66,15 @@ chua3d/
   - Âm lượng giọng nói trong Cài đặt. Trình duyệt chặn phát tiếng thì hiện nút "Chạm để nghe giọng nói".
   - `livekit-client` chỉ tải khi vào phòng voice; server chưa cấu hình LiveKit thì nút mic báo lý do, mọi thứ khác vẫn chạy. Máy chủ voice tạm mất thì client tự thử lại mỗi 15 giây.
 
+**Nhạc nền chùa**
+- Hai bản nhạc **nguyên gốc, tổng hợp bằng máy** (không dùng mẫu âm thanh nào, không vướng bản quyền), thang âm ngũ cung Việt, mỗi bản 2 phút lặp liền mạch:
+  - `client/public/audio/bgm-courtyard.mp3` – *Sân chùa – gió sớm*: ngân nền, đàn rải kiểu đàn tranh, đại hồng chung, gió nhẹ, chim hót.
+  - `client/public/audio/bgm-hall.mp3` – *Chánh điện – trầm hương*: ngân trầm, khánh, mõ thưa, vang phòng lớn.
+- Đổi khu vực thì chuyển chéo 2,5 giây. Phát bằng Web Audio (lặp chính xác từng mẫu, không hở), chỉ giải mã 1 bản lúc phát (24 kHz) cho nhẹ điện thoại. Bắt đầu sau lần chạm/phím đầu tiên (chính sách autoplay).
+- Bật/tắt nhanh bằng nút ♫ góc phải trên; âm lượng ở Cài đặt → "Nhạc nền / kinh". Tịnh tâm vẫn giữ nhạc nền.
+- Tạo lại / đổi giai điệu: `node scripts/gen-bgm.mjs` (cần ffmpeg; đổi `seed` trong file). Muốn dùng **nhạc thật**: thay 2 file mp3 cùng tên – nhớ chỉ dùng bản bạn có quyền sử dụng.
+- iPhone đang bật **gạt im lặng** thì Web Audio không phát tiếng (giới hạn của iOS).
+
 **Kênh**: mỗi kênh tối đa 50 người. Kênh đầy thì tự mở kênh mới; kênh trống (trừ kênh 1) tự đóng. Chánh điện mỗi kênh tối đa 20 người.
 
 ## Chạy local

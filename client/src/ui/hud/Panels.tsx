@@ -6,6 +6,7 @@ import { LETTERS, useMail } from '../mail';
 import { useDesktop, useTouch } from '../hooks';
 import { CloseIcon } from '../icons';
 import { PeoplePanel } from './Voice';
+import { toggleFullscreen } from './Corners';
 
 const TITLES: Record<PanelId, string> = {
   quests: 'Nhiệm vụ', bag: 'Túi đồ', shop: 'Cửa hàng', friends: 'Đạo hữu', map: 'Bản đồ',
@@ -60,9 +61,13 @@ function SettingsPanel() {
       <p className="px-1 pt-2 text-xs font-bold uppercase tracking-wide text-brick-700">Tĩnh lặng</p>
       <Toggle label="Tịnh tâm" desc="Ẩn trò chuyện, tắt giọng nói và micro – chỉ nghe tiếng chùa, lời kinh" checked={zen} onChange={(v) => useGame.getState().setZen(v)} />
       <p className="px-1 pt-2 text-xs font-bold uppercase tracking-wide text-brick-700">Âm lượng</p>
-      <Slider label="Nhạc / kinh" value={s.volMusic} onChange={(v) => set({ volMusic: v })} note="Áp dụng khi có Phát chung (giai đoạn 5)" />
+      <Toggle label="Nhạc nền chùa" desc="Sân chùa: đàn, chuông, gió, chim · Chánh điện: khánh, mõ, trầm ấm" checked={s.music} onChange={(v) => set({ music: v })} />
+      <Slider label="Nhạc nền / kinh" value={s.volMusic} onChange={(v) => set({ volMusic: v })} note="Nhạc nền chùa (và kinh Phát chung ở giai đoạn 5)" />
       <Slider label="Giọng nói" value={s.volVoice} onChange={(v) => set({ volVoice: v })} note="Ở sân chùa: người càng xa nghe càng nhỏ; trong chánh điện nghe chung" />
       <Slider label="Hiệu ứng" value={s.volSfx} onChange={(v) => set({ volSfx: v })} note="Chuông, khánh, mõ, tiếng nước…" />
+      <button className="btn-glass mt-1 w-full py-2" onClick={() => toggleFullscreen(useGame.getState().toast)}>
+        ⛶ Toàn màn hình
+      </button>
       <button className="btn-glass mt-1 w-full py-2" onClick={() => useGame.getState().openPanel('stream')}>
         🎵 Phát chung (sắp có)
       </button>

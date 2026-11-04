@@ -102,7 +102,7 @@ function Currency({ icon, value, label, tone }: { icon: React.ReactNode; value: 
   );
 }
 
-async function toggleFullscreen(toast: (t: string) => void) {
+export async function toggleFullscreen(toast: (t: string) => void) {
   const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
@@ -122,6 +122,8 @@ export function TopRight() {
   const toast = useGame((s) => s.toast);
   const unreadMail = useUnreadMail();
   const desktop = useDesktop();
+  const music = useGame((s) => s.settings.music);
+  const setSettings = useGame((s) => s.setSettings);
 
   return (
     <div className="pointer-events-auto flex flex-col items-end gap-2">
@@ -136,12 +138,18 @@ export function TopRight() {
         <IconBtn label={favorite ? 'Bỏ yêu thích' : 'Yêu thích'} onClick={toggleFavorite} active={favorite}>
           <I.HeartIcon size={18} />
         </IconBtn>
+        <IconBtn label={music ? 'Tắt nhạc nền' : 'Bật nhạc nền'} onClick={() => setSettings({ music: !music })} active={music}>
+          <I.MusicIcon size={18} />
+        </IconBtn>
         <IconBtn label="Trợ giúp" onClick={() => openPanel('help')}>
           <I.HelpIcon size={18} />
         </IconBtn>
-        <IconBtn label="Toàn màn hình" onClick={() => toggleFullscreen(toast)}>
-          <I.FullscreenIcon size={18} />
-        </IconBtn>
+        {/* điện thoại: chuyển vào Cài đặt cho đỡ chật */}
+        {desktop && (
+          <IconBtn label="Toàn màn hình" onClick={() => toggleFullscreen(toast)}>
+            <I.FullscreenIcon size={18} />
+          </IconBtn>
+        )}
       </div>
       <button
         onClick={() => openPanel('map')}

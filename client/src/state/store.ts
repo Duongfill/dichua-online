@@ -23,12 +23,13 @@ export interface Settings {
   quality: 'low' | 'high';
   showNames: boolean;
   bubbles: boolean;
-  volMusic: number; // giai đoạn 5
+  music: boolean; // nhạc nền chùa
+  volMusic: number; // nhạc nền + (giai đoạn 5) kinh phát chung
   volVoice: number; // giai đoạn 4
   volSfx: number; // giai đoạn 3
 }
 const DEFAULT_SETTINGS: Settings = {
-  shadows: true, quality: 'high', showNames: true, bubbles: true, volMusic: 0.8, volVoice: 0.9, volSfx: 0.6,
+  shadows: true, quality: 'high', showNames: true, bubbles: true, music: true, volMusic: 0.8, volVoice: 0.9, volSfx: 0.6,
 };
 
 interface GameState {

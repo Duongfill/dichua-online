@@ -7,6 +7,7 @@ import Hud from './ui/Hud';
 import { pressE } from './ui/hud/Interact';
 import './game/voice'; // tự vào/ra phòng voice theo khu vực
 import { unlockAudio } from './game/sfx';
+import { unlockMusic } from './game/bgm';
 import Login from './ui/Login';
 
 export default function App() {
@@ -30,7 +31,10 @@ export default function App() {
 
   // trình duyệt chỉ cho phát âm thanh sau thao tác của người dùng
   useEffect(() => {
-    const on = () => unlockAudio();
+    const on = () => {
+      unlockAudio();
+      unlockMusic();
+    };
     window.addEventListener('pointerdown', on);
     window.addEventListener('keydown', on);
     return () => {
