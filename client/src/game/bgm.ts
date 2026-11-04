@@ -67,6 +67,18 @@ function applyVolume() {
   master.gain.setTargetAtTime(v, ctx.currentTime, 0.3);
 }
 
+/** Nối một thẻ audio vào Web Audio (chỉnh âm lượng được cả trên iOS). null nếu chưa mở khoá âm thanh. */
+export function connectMedia(el: HTMLMediaElement): GainNode | null {
+  if (!ctx) return null;
+  try {
+    const g = ctx.createGain();
+    ctx.createMediaElementSource(el).connect(g).connect(ctx.destination);
+    return g;
+  } catch {
+    return null;
+  }
+}
+
 /** Hạ nhỏ nhạc nền (0..1) – dùng khi đang Phát chung kinh. */
 export function setMusicDuck(k: number) {
   duck = Math.max(0, Math.min(1, k));

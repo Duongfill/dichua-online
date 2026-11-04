@@ -1,8 +1,11 @@
 // Hồ sơ người chơi theo token trình duyệt (trong RAM). Giai đoạn 6 thay bằng DB + đăng nhập.
 // Mất khi server khởi động lại – đủ để tải lại trang không mất công đức/cooldown.
+import { randomUUID } from 'node:crypto';
 import { expForLevel, titleFor, type ActionId, type Wallet } from '@chua/shared';
 
 export interface Profile {
+  key: string; // định danh ẩn (vd. đếm báo cáo không trùng người)
+  admin?: boolean;
   level: number;
   wallet: Wallet;
   cooldowns: Partial<Record<ActionId, number>>; // thời điểm (ms) được làm lại
@@ -13,6 +16,7 @@ const profiles = new Map<string, Profile>();
 const TOKEN_RE = /^[A-Za-z0-9-]{16,64}$/;
 
 const fresh = (): Profile => ({
+  key: randomUUID(),
   level: 1,
   wallet: { merit: 0, jade: 10, exp: 0, expNext: expForLevel(1), title: titleFor(1) }, // 10 ngọc chào mừng
   cooldowns: {},

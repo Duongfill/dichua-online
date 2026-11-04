@@ -6,6 +6,7 @@ import { LETTERS, useMail } from '../mail';
 import { useDesktop, useTouch } from '../hooks';
 import { CloseIcon } from '../icons';
 import { PeoplePanel } from './Voice';
+import { StreamPanel } from './Stream';
 import { toggleFullscreen } from './Corners';
 
 const TITLES: Record<PanelId, string> = {
@@ -19,7 +20,6 @@ const SOON: Partial<Record<PanelId, { text: string; phase: number }>> = {
   shop: { text: 'Đổi điểm công đức / ngọc lấy nhang, hoa, trang phục cho nhân vật.', phase: 6 },
   prayers: { text: 'Các bài văn khấn thường dùng khi lễ Phật, cầu an, cầu siêu – kèm hướng dẫn.', phase: 6 },
   calendar: { text: 'Lịch âm với mùng 1, ngày rằm và các ngày lễ lớn; trạng thái "Hoa" sẽ đổi theo ngày.', phase: 6 },
-  stream: { text: 'Tải lên kinh/nhạc, danh sách phát và phát đồng bộ cho cả chùa.', phase: 5 },
 };
 
 function Toggle({ label, desc, checked, onChange }: { label: string; desc?: string; checked: boolean; onChange: (v: boolean) => void }) {
@@ -69,7 +69,7 @@ function SettingsPanel() {
         ⛶ Toàn màn hình
       </button>
       <button className="btn-glass mt-1 w-full py-2" onClick={() => useGame.getState().openPanel('stream')}>
-        🎵 Phát chung (sắp có)
+        🎵 Phát chung
       </button>
     </div>
   );
@@ -207,6 +207,7 @@ export default function Panels() {
   else if (panel === 'help') body = <HelpPanel />;
   else if (panel === 'mail') body = <MailPanel />;
   else if (panel === 'friends') body = <PeoplePanel />;
+  else if (panel === 'stream') body = <StreamPanel />;
   else body = <Soon id={panel} />;
 
   return (

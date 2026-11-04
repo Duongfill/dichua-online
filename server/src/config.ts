@@ -27,6 +27,10 @@ export const config = {
   clientDist: path.join(ROOT, 'client', 'dist'),
   corsOrigin: process.env.CORS_ORIGIN || null,
   resumeGraceMs: 15_000,
+  /** Phát chung: nơi lưu file đã chuyển mã + library.json (Render free: ổ đĩa tạm, mất khi deploy lại) */
+  mediaDir: process.env.MEDIA_DIR || path.join(ROOT, 'server', 'uploads'),
+  /** Mật khẩu Admin/Điều phối. Khi dev mặc định "admin"; chạy thật phải đặt ADMIN_PASSWORD, không thì tắt quyền admin. */
+  adminPassword: process.env.ADMIN_PASSWORD || (isDev ? 'admin' : ''),
   /** Voice (LiveKit). Thiếu 1 trong 3 biến → tắt voice, game vẫn chạy. */
   livekit: {
     url: process.env.LIVEKIT_URL || '',

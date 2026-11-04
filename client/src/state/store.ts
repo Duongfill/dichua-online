@@ -2,11 +2,11 @@ import { create } from 'zustand';
 import {
   ACTION_DEFS, CHESS_SEATS, COURTYARD, DEFAULT_APPEARANCE, HALL_SEATS, INTERACTIONS, TICK_HZ, collide, interactionsAt, sanitizeAppearance,
   type Ack, type ActionId, type Announce, type Appearance, type ChatMsg, type ChatReq, type Interaction, type MoveTuple,
-  type ChessState, type PlayerInfo, type SceneId, type SeatsState, type Side, type Stats, type Wallet, type Zone,
+  type ChessState, type MediaItem, type PlayerInfo, type StreamOp, type StreamState, type SceneId, type SeatsState, type Side, type Stats, type Wallet, type Zone,
 } from '@chua/shared';
 import { activeActions, emitFx } from '../game/fx';
 import { chime, smallBell, woodBlock } from '../game/sfx';
-import { socket, resetClock } from '../net/socket';
+import { socket, resetClock, noteServerTime } from '../net/socket';
 import { clearBuffers, pushSnapshot, removeBuffer } from '../net/interp';
 import { local } from '../game/local';
 
@@ -24,12 +24,13 @@ export interface Settings {
   showNames: boolean;
   bubbles: boolean;
   music: boolean; // nhạc nền chùa
+  stream: boolean; // nghe Phát chung
   volMusic: number; // nhạc nền + (giai đoạn 5) kinh phát chung
   volVoice: number; // giai đoạn 4
   volSfx: number; // giai đoạn 3
 }
 const DEFAULT_SETTINGS: Settings = {
-  shadows: true, quality: 'high', showNames: true, bubbles: true, music: true, volMusic: 0.8, volVoice: 0.9, volSfx: 0.6,
+  shadows: true, quality: 'high', showNames: true, bubbles: true, music: true, stream: true, volMusic: 0.8, volVoice: 0.9, volSfx: 0.6,
 };
 
 interface GameState {
@@ -77,6 +78,12 @@ interface GameState {
   chess: ChessState | null;
   chessOpen: boolean;
 
+  // Phát chung
+  lib: MediaItem[];
+  stream: StreamState | null;
+  streamBlocked: boolean;
+  isAdmin: boolean;
+
   setProfile: (p: Profile) => void;
   enter: () => Promise<void>;
   changeScene: (to: SceneId) => Promise<void>;
@@ -99,6 +106,9 @@ interface GameState {
   chessLeave: () => void;
   chessMove: (from: number, to: number) => Promise<boolean>;
   chessCmd: (cmd: 'chess:resign' | 'chess:rematch') => Promise<void>;
+  streamCtl: (op: StreamOp) => Promise<void>;
+  adminLogin: (password: string) => Promise<boolean>;
+  reportMedia: (id: string) => Promise<void>;
 }
 
 const load = <T,>(key: string, fallback: T): T => {
@@ -174,6 +184,10 @@ export const useGame = create<GameState>((set, get) => ({
   selected: null,
   chess: null,
   chessOpen: false,
+  lib: [],
+  stream: null,
+  streamBlocked: false,
+  isAdmin: false,
 
   setProfile: (profile) => {
     set({ profile });
@@ -270,6 +284,7 @@ export const useGame = create<GameState>((set, get) => ({
     const id = ++seq;
     set((s) => ({
       wallet: res.wallet,
+    isAdmin: res.admin,
       self: s.self ? { ...s.self, level: res.level } : s.self,
       cooldowns: { ...s.cooldowns, [action]: Date.now() + res.cooldownMs },
       floaters: [...s.floaters, { id, text: `+${res.gained.merit} công đức · +${res.gained.exp} KN` }],
@@ -364,6 +379,25 @@ export const useGame = create<GameState>((set, get) => ({
     if (res && !res.ok) get().toast(res.error, 'warn');
   },
 
+  streamCtl: async (op) => {
+    const res = await socket.timeout(5000).emitWithAck('stream:ctl', op).catch(() => null);
+    if (!res || !res.ok) get().toast(res && !res.ok ? res.error : 'Mất kết nối, xin thử lại.', 'warn');
+  },
+  adminLogin: async (password) => {
+    const res = await socket.timeout(5000).emitWithAck('stream:admin', { password }).catch(() => null);
+    if (res?.ok) {
+      set({ isAdmin: true });
+      get().toast('Đã vào quyền Điều phối 🎛');
+      return true;
+    }
+    get().toast(res && !res.ok ? res.error : 'Mất kết nối, xin thử lại.', 'warn');
+    return false;
+  },
+  reportMedia: async (id) => {
+    const res = await socket.timeout(5000).emitWithAck('stream:report', { id }).catch(() => null);
+    get().toast(res?.ok ? 'Đã gửi báo cáo. Xin cảm ơn.' : 'Không gửi được báo cáo.', res?.ok ? 'info' : 'warn');
+  },
+
   banner: (a) => {
     const id = ++seq;
     set((s) => ({ banners: [...s.banners.slice(-2), { ...a, id }] }));
@@ -445,6 +479,11 @@ socket.on('act', (e) => {
     local.faceRy = e.ry;
     local.target = null;
   }
+});
+socket.on('stream:lib', (lib) => useGame.setState({ lib }));
+socket.on('stream:state', ({ serverNow, ...s }) => {
+  noteServerTime(serverNow);
+  useGame.setState({ stream: s });
 });
 socket.on('chess', (chess) => {
   const st = useGame.getState();

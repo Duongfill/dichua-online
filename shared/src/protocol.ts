@@ -1,5 +1,6 @@
 import type { ActEvent, ActRes, ActionId } from './actions';
 import type { ChessState, Side } from './xiangqi';
+import type { MediaItem, StreamOp, StreamState } from './stream';
 
 // Giao thức client <-> server (Socket.IO). Giữ gọn để gửi 15 lần/giây.
 
@@ -105,7 +106,7 @@ export interface HelloReq {
 }
 
 export type HelloRes =
-  | { ok: true; self: PlayerInfo & Pose; wallet: Wallet; channel: number; players: PlayerInfo[]; history: ChatMsg[]; serverTime: number }
+  | { ok: true; self: PlayerInfo & Pose; wallet: Wallet; admin: boolean; channel: number; players: PlayerInfo[]; history: ChatMsg[]; serverTime: number }
   | { ok: false; error: string };
 
 export type SceneRes =
@@ -138,6 +139,8 @@ export interface ServerToClient {
   'player:update': (p: { id: string; level: number }) => void;
   seats: (s: SeatsState) => void;
   chess: (s: ChessState) => void;
+  'stream:lib': (items: MediaItem[]) => void;
+  'stream:state': (s: StreamState & { serverNow: number }) => void;
 }
 
 export interface ClientToServer {
@@ -153,5 +156,8 @@ export interface ClientToServer {
   'chess:move': (req: { from: number; to: number }, ack: (res: Ack) => void) => void;
   'chess:resign': (ack: (res: Ack) => void) => void;
   'chess:rematch': (ack: (res: Ack) => void) => void;
+  'stream:admin': (req: { password: string }, ack: (res: Ack) => void) => void;
+  'stream:ctl': (req: StreamOp, ack: (res: Ack) => void) => void;
+  'stream:report': (req: { id: string }, ack: (res: Ack) => void) => void;
   'scene:change': (req: { scene: SceneId }, ack: (res: SceneRes) => void) => void;
 }

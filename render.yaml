@@ -12,6 +12,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
+      - key: ADMIN_PASSWORD # mật khẩu Điều phối (Phát chung) – đặt chuỗi khó đoán
+        sync: false
       - key: LIVEKIT_URL # wss://<project>.livekit.cloud
         sync: false
       - key: LIVEKIT_API_KEY

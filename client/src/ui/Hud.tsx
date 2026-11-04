@@ -11,6 +11,7 @@ import { ChatButton, ChatPanel, ChatPreview, ChatSheet } from './hud/ChatBox';
 import { PlayerCard, TopRight } from './hud/Corners';
 import Panels from './hud/Panels';
 import ChessPanel from './hud/Chess';
+import { NowPlaying } from './hud/Stream';
 import InteractPrompt from './hud/Interact';
 import { AudioUnlock, MicButton, PlayerPopover, ZenButton } from './hud/Voice';
 
@@ -52,6 +53,7 @@ export default function Hud() {
       {/* giữa trên: banner + thông báo */}
       <div className="absolute inset-x-0 top-[138px] flex flex-col items-center gap-2 px-4 md:top-4 md:px-[300px]">
         <Banner />
+        <NowPlaying />
         <Toasts />
         <AudioUnlock />
         <PlayerPopover />

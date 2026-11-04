@@ -10,6 +10,8 @@ import {
 import { getProfile, grant } from './profiles';
 import { config, voiceEnabled } from './config';
 import { voiceToken } from './voice';
+import { StreamService } from './stream';
+import { timingSafeEqual } from 'node:crypto';
 import { ChatLimiter, cleanChat, cleanName } from './moderation';
 import { World, publicInfo, roomOf, type ServerPlayer } from './world';
 
@@ -25,6 +27,20 @@ const io = new Server<ClientToServer, ServerToClient, Record<string, never>, { p
 
 const world = new World();
 world.pickChannel(); // kênh 1 luôn có sẵn
+
+const stream = new StreamService(
+  config.mediaDir,
+  () => io.emit('stream:lib', stream.list()),
+  () => io.emit('stream:state', { ...stream.state, serverNow: Date.now() }),
+);
+app.use('/media', express.static(config.mediaDir, { maxAge: '7d', index: false }));
+app.post('/api/media/upload', (req, res) => {
+  // xác thực: socket của người chơi đang ở trong chùa
+  const sock = io.sockets.sockets.get(String(req.header('x-socket-id') || ''));
+  const p = sock?.data.player;
+  if (!p) return res.status(401).json({ ok: false, error: 'Hãy vào chùa trước khi tải lên.' });
+  stream.handleUpload(req, res, { id: p.profile.key, name: p.name, admin: !!p.profile.admin });
+});
 
 app.get('/healthz', (_req, res) => res.json({ ok: true, online: world.online(), channels: world.channels.size }));
 if (fs.existsSync(config.clientDist)) {
@@ -64,6 +80,8 @@ const isScene = (s: unknown): s is SceneId => s === 'courtyard' || s === 'hall';
 const finite = (...v: unknown[]) => v.every((n) => typeof n === 'number' && Number.isFinite(n));
 
 io.on('connection', (socket) => {
+  socket.emit('stream:lib', stream.list());
+  socket.emit('stream:state', { ...stream.state, serverNow: Date.now() });
   socket.on('hello', (req, ack) => {
     if (typeof ack !== 'function') return;
     if (socket.data.player) return ack({ ok: false, error: 'Bạn đã ở trong chùa.' });
@@ -96,6 +114,7 @@ io.on('connection', (socket) => {
       ok: true,
       self: { ...publicInfo(p), ...pose },
       wallet: p.wallet,
+      admin: !!p.profile.admin,
       channel: ch.id,
       players: ch.list(scene),
       history: ch.history[scene],
@@ -314,6 +333,37 @@ io.on('connection', (socket) => {
     }
     sendChess(ch.id);
     if (typeof ack === 'function') ack(err ? { ok: false, error: err } : { ok: true });
+  });
+
+  // ---------- Phát chung ----------
+  socket.on('stream:admin', (req, ack) => {
+    if (typeof ack !== 'function') return;
+    const p = socket.data.player;
+    if (!p) return ack({ ok: false, error: 'Bạn chưa vào chùa.' });
+    if (!config.adminPassword) return ack({ ok: false, error: 'Máy chủ chưa đặt ADMIN_PASSWORD.' });
+    const a = Buffer.from(String(req?.password ?? ''));
+    const b = Buffer.from(config.adminPassword);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return ack({ ok: false, error: 'Sai mật khẩu.' });
+    p.profile.admin = true;
+    console.log(`[admin] ${p.name} đăng nhập quyền Điều phối`);
+    ack({ ok: true });
+  });
+
+  socket.on('stream:ctl', (req, ack) => {
+    if (typeof ack !== 'function') return;
+    const p = socket.data.player;
+    if (!p?.profile.admin) return ack({ ok: false, error: 'Chỉ Admin/Điều phối mới điều khiển được.' });
+    const err = stream.control(req);
+    ack(err ? { ok: false, error: err } : { ok: true });
+  });
+
+  socket.on('stream:report', (req, ack) => {
+    if (typeof ack !== 'function') return;
+    const p = socket.data.player;
+    if (!p) return ack({ ok: false, error: 'Bạn chưa vào chùa.' });
+    const err = stream.report(String(req?.id ?? ''), p.profile.key);
+    console.log(`[report] ${p.name} báo cáo nội dung ${req?.id}`);
+    ack(err ? { ok: false, error: err } : { ok: true });
   });
 
   socket.on('chat:send', (req, ack) => {

@@ -11,6 +11,7 @@ export default defineConfig({
     proxy: {
       '/socket.io': { target: SERVER, ws: true },
       '/api': SERVER,
+      '/media': SERVER,
     },
   },
   build: {
