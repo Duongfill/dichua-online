@@ -51,7 +51,7 @@ export function syncStream() {
   const pos = st ? streamPos(st, serverNow()) : 0;
   applyVolume();
   syncEl(audio, s.phase === 'playing' && s.settings.stream ? item?.audioUrl : undefined, pos, on);
-  if (video) syncEl(video, s.scene === 'hall' ? item?.videoUrl : undefined, pos, on);
+  if (video) syncEl(video, s.settings.stream ? item?.videoUrl : undefined, pos, on);
   setMusicDuck(on ? 0.25 : 1); // nhạc nền nhỏ lại khi đang phát kinh
 }
 

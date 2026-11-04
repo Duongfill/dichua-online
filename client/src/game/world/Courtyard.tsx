@@ -5,6 +5,7 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { COURTYARD } from '@chua/shared';
 import { brickTexture } from './textures';
 import ChessTable from './ChessTable';
+import { EastGarden, OutdoorScreen, Stupa } from './Expansion';
 import {
   BellPavilion, BigTree, Bonsai, C, Column, FlagString, IncenseBurner, LanternPost, LotusPond, Plaque, Roof,
 } from './props';
@@ -93,8 +94,8 @@ function Gate() {
       <Plaque text="Chùa Online" position={[0, 3.55, -0.47]} width={3.4} />
       {/* tường bao hai bên */}
       {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * 14, 0.9, 0.3]} castShadow receiveShadow>
-          <boxGeometry args={[20, 1.8, 0.6]} />
+        <mesh key={s} position={[s * 26, 0.9, 0.3]} castShadow receiveShadow>
+          <boxGeometry args={[44, 1.8, 0.6]} />
           <meshStandardMaterial color={C.wall} />
         </mesh>
       ))}
@@ -112,7 +113,7 @@ const FLAG_LINES: [V3, V3][] = [
 ];
 
 export default function Courtyard({ onGround }: { onGround: (e: ThreeEvent<MouseEvent>) => void }) {
-  const plazaTex = useMemo(() => brickTexture([20, 17]), []);
+  const plazaTex = useMemo(() => brickTexture([44, 17]), []);
   const hills = useMemo(
     () => Array.from({ length: 14 }).map((_, i) => {
       const a = (i / 14) * Math.PI * 2;
@@ -146,7 +147,7 @@ export default function Courtyard({ onGround }: { onGround: (e: ThreeEvent<Mouse
       </mesh>
       {/* sân gạch đỏ */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 5.5]} receiveShadow onClick={onGround}>
-        <planeGeometry args={[40, 34]} />
+        <planeGeometry args={[88, 34]} />
         <meshStandardMaterial map={plazaTex} roughness={0.9} />
       </mesh>
       {/* lối đi lát đá chính giữa */}
@@ -169,6 +170,9 @@ export default function Courtyard({ onGround }: { onGround: (e: ThreeEvent<Mouse
       <LotusPond position={[COURTYARD.pond.x, 0, COURTYARD.pond.z]} r={COURTYARD.pond.r} />
       <BellPavilion position={[COURTYARD.bell.x, 0, COURTYARD.bell.z]} />
       <ChessTable />
+      <OutdoorScreen />
+      <Stupa />
+      <EastGarden />
       {COURTYARD.bonsai.map(([x, z], i) => (
         <Bonsai key={i} position={[x, 0, z]} seed={i + 1} />
       ))}

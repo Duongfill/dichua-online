@@ -10,7 +10,7 @@ export interface Zone { id: 'hall-door' | 'hall-exit' | 'chess'; x: number; z: n
 export const PLAYER_RADIUS = 0.35;
 
 export const SCENES: Record<SceneId, { bounds: Bounds; spawn: Pose }> = {
-  courtyard: { bounds: { minX: -24, maxX: 24, minZ: -22, maxZ: 24 }, spawn: { x: 0, z: 13, ry: Math.PI } },
+  courtyard: { bounds: { minX: -48, maxX: 48, minZ: -22, maxZ: 24 }, spawn: { x: 0, z: 13, ry: Math.PI } },
   hall: { bounds: { minX: -9.2, maxX: 9.2, minZ: -10.2, maxZ: 9.2 }, spawn: { x: 0, z: 5.6, ry: Math.PI } },
 };
 
@@ -26,12 +26,22 @@ export const COURTYARD = {
   ] as [number, number][],
   bigTrees: [
     [-20, 18], [20, 18], [-21, -8], [21, -8], [-19, -18], [19, -18],
+    [-45, 20], [45, 20], [-45, -19], [45, -19], [-30, -19], [30, -19],
   ] as [number, number][],
   lanternPoles: [
     [-3.5, 16], [3.5, 16], [-3.5, 10], [3.5, 10], [-3.5, 4], [3.5, 4],
   ] as [number, number][],
   /** bàn cờ tướng bằng đá dưới gốc cây cổ thụ (góc tây nam, gần cổng) */
   chess: { x: -15.5, z: 17 },
+  /** khu mở rộng phía tây: màn hình lớn ngoài trời (quay về phía đông) + ghế đá */
+  screen: { x: -38, z: 1, w: 9.6, h: 5.4 },
+  benches: [
+    [-31, -3.5], [-31, 0], [-31, 3.5], [-31, 7], [-27, -3.5], [-27, 0], [-27, 3.5], [-27, 7],
+  ] as [number, number][],
+  /** khu mở rộng phía đông: bảo tháp 7 tầng + vườn bonsai */
+  stupa: { x: 36, z: 0 },
+  eastBonsai: [[31, -6], [31, 6], [41, -6], [41, 6], [28, 14], [44, 12]] as [number, number][],
+  eastLanterns: [[30, -2], [30, 2], [42, -2], [42, 2]] as [number, number][],
 };
 
 // ---- Chánh điện: 20 bồ đoàn, 4 hàng × 5 ----
@@ -54,12 +64,18 @@ export const COLLIDERS: Record<SceneId, { circles: Circle[]; boxes: Box[] }> = {
       ...COURTYARD.bonsai.map(([x, z]) => ({ x, z, r: 0.7 })),
       ...COURTYARD.bigTrees.map(([x, z]) => ({ x, z, r: 1.1 })),
       ...COURTYARD.lanternPoles.map(([x, z]) => ({ x, z, r: 0.22 })),
+      { x: COURTYARD.screen.x, z: COURTYARD.screen.z - COURTYARD.screen.w / 2, r: 0.45 }, // 2 cột màn hình
+      { x: COURTYARD.screen.x, z: COURTYARD.screen.z + COURTYARD.screen.w / 2, r: 0.45 },
+      { x: COURTYARD.stupa.x, z: COURTYARD.stupa.z, r: 2.8 },
+      ...COURTYARD.eastBonsai.map(([x, z]) => ({ x, z, r: 0.7 })),
+      ...COURTYARD.eastLanterns.map(([x, z]) => ({ x, z, r: 0.22 })),
       { x: -3.4, z: COURTYARD.gate.z, r: 0.6 },
       { x: COURTYARD.chess.x, z: COURTYARD.chess.z, r: 0.65 }, // bàn đá (ghế đá không cản)
       { x: 3.4, z: COURTYARD.gate.z, r: 0.6 },
     ],
     boxes: [
       { x: COURTYARD.hallBuilding.x, z: COURTYARD.hallBuilding.z, hw: COURTYARD.hallBuilding.w / 2, hd: COURTYARD.hallBuilding.d / 2 },
+      ...COURTYARD.benches.map(([x, z]) => ({ x, z, hw: 0.35, hd: 1.2 })), // ghế đá dài
     ],
   },
   hall: {

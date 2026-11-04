@@ -8,30 +8,17 @@ import { woodTexture } from './textures';
 import { C, Candle, Column, Lantern, LotusFlower, Plaque, Smoke } from './props';
 import { IncenseOfferings, useBowFx } from './Fx';
 import { useGame } from '../../state/store';
-import { getVideo } from '../stream';
+import Screen from './Screen';
 
-/** Màn hình chiếu video Phát chung (tường trái chánh điện). Chỉ hiện khi bài đang phát có video. */
+/** Màn hình Phát chung (tường trái chánh điện): video đã tải lên / ảnh bìa YouTube / bảng chờ. */
 function VideoScreen() {
-  const url = useGame((s) => {
-    const it = s.stream?.current ? s.lib.find((i) => i.id === s.stream!.current) : undefined;
-    return s.settings.stream ? it?.videoUrl : undefined;
-  });
-  const tex = useMemo(() => {
-    const t = new THREE.VideoTexture(getVideo());
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }, []);
-  if (!url) return null;
   return (
     <group position={[SCENES.hall.bounds.minX - 0.7, 3.4, -1.5]} rotation={[0, Math.PI / 2, 0]}>
       <mesh position={[0, 0, -0.02]}>
         <planeGeometry args={[5.2, 3.1]} />
         <meshStandardMaterial color={C.gold} />
       </mesh>
-      <mesh>
-        <planeGeometry args={[4.9, 2.76]} />
-        <meshBasicMaterial map={tex} toneMapped={false} />
-      </mesh>
+      <Screen w={4.9} h={2.76} />
     </group>
   );
 }

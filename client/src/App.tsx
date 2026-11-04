@@ -9,6 +9,7 @@ import './game/voice'; // tự vào/ra phòng voice theo khu vực
 import { unlockAudio } from './game/sfx';
 import { unlockMusic } from './game/bgm';
 import './game/stream'; // phát chung đồng bộ
+import './game/youtube'; // phát link YouTube (trình phát nhúng)
 import Login from './ui/Login';
 
 export default function App() {

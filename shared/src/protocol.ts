@@ -159,5 +159,7 @@ export interface ClientToServer {
   'stream:admin': (req: { password: string }, ack: (res: Ack) => void) => void;
   'stream:ctl': (req: StreamOp, ack: (res: Ack) => void) => void;
   'stream:report': (req: { id: string }, ack: (res: Ack) => void) => void;
+  'stream:youtube': (req: { url: string }, ack: (res: Ack & { pending?: boolean }) => void) => void;
+  'stream:ytDuration': (req: { id: string; duration: number }) => void;
   'scene:change': (req: { scene: SceneId }, ack: (res: SceneRes) => void) => void;
 }

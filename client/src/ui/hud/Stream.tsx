@@ -31,11 +31,11 @@ export function NowPlaying() {
 function Row({ it, children }: { it: MediaItem; children?: React.ReactNode }) {
   return (
     <li className="flex items-center gap-2 rounded-2xl bg-white/45 px-3 py-1.5">
-      <span className="text-base">{it.kind === 'video' ? '🎬' : '🎵'}</span>
+      <span className="text-base">{it.kind === 'youtube' ? '▶️' : it.kind === 'video' ? '🎬' : '🎵'}</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-semibold">{it.title}</span>
         <span className="block text-[11px] text-amberwood-800/70">
-          {it.status === 'processing' ? 'Đang xử lý…' : it.status === 'error' ? `Lỗi: ${it.error}` : fmt(it.duration)} · {it.uploader}
+          {it.status === 'processing' ? 'Đang xử lý…' : it.status === 'error' ? `Lỗi: ${it.error}` : it.duration ? fmt(it.duration) : 'YouTube'} · {it.uploader}
           {it.reports ? ` · 🚩${it.reports}` : ''}
         </span>
       </span>
@@ -71,11 +71,35 @@ function Upload({ admin }: { admin: boolean }) {
         <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
         <span>Tôi chỉ tải lên nội dung tôi <b>có quyền sử dụng</b> (tự thu, được chùa/tác giả cho phép, hoặc giấy phép tự do). Nội dung vi phạm sẽ bị gỡ.</span>
       </label>
-      <p className="text-[11px] text-amberwood-800/60">{MEDIA_EXT.join(', ')} · tối đa {MEDIA_MAX_MB} MB · video sẽ chiếu lên màn hình trong chánh điện</p>
+      <p className="text-[11px] text-amberwood-800/60">{MEDIA_EXT.join(', ')} · tối đa {MEDIA_MAX_MB} MB · video chiếu lên màn hình ngoài sân và trong chánh điện</p>
       <button onClick={send} disabled={!file || !agree || prog !== null} className="btn-primary w-full py-2 text-sm">
         {prog !== null ? `Đang tải lên… ${Math.round(prog * 100)}%` : admin ? 'Tải lên' : 'Gửi đề xuất'}
       </button>
     </div>
+  );
+}
+
+function YoutubeLink({ admin }: { admin: boolean }) {
+  const [url, setUrl] = useState('');
+  const [busy, setBusy] = useState(false);
+  return (
+    <form
+      className="space-y-2 rounded-2xl bg-white/45 p-3"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!url.trim() || busy) return;
+        setBusy(true);
+        if (await useGame.getState().addYoutube(url.trim())) setUrl('');
+        setBusy(false);
+      }}
+    >
+      <p className="text-sm font-semibold">{admin ? 'Thêm link YouTube' : 'Đề xuất link YouTube'}</p>
+      <div className="flex gap-2">
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=…" className="min-w-0 flex-1 rounded-xl border border-white/60 bg-white/70 px-3 py-1.5 text-sm" />
+        <button className="btn-primary px-3 py-1.5 text-sm" disabled={!url.trim() || busy}>{busy ? '…' : 'Thêm'}</button>
+      </div>
+      <p className="text-[11px] text-amberwood-800/60">Phát bằng trình phát YouTube chính thức (khung video hiện trên màn hình, có thể có quảng cáo). Video bị chủ kênh tắt nhúng sẽ không thêm được.</p>
+    </form>
   );
 }
 
@@ -103,7 +127,7 @@ export function StreamPanel() {
   const { streamCtl: ctl, reportMedia, setSettings } = useGame.getState();
   useNow(500);
   const cur = st?.current ? lib.find((i) => i.id === st.current) : undefined;
-  const pos = st && cur ? Math.min(cur.duration, streamPos(st, serverNow())) : 0;
+  const pos = st && cur ? (cur.duration ? Math.min(cur.duration, streamPos(st, serverNow())) : streamPos(st, serverNow())) : 0;
   const queue = (st?.queue ?? []).map((id) => lib.find((i) => i.id === id)).filter(Boolean) as MediaItem[];
   const ready = lib.filter((i) => i.status === 'ready');
   const pending = lib.filter((i) => i.status !== 'ready' && (admin || i.status === 'processing'));
@@ -112,22 +136,22 @@ export function StreamPanel() {
     <div className="space-y-3">
       <div className="rounded-2xl bg-white/55 p-3">
         <p className="text-xs font-bold uppercase tracking-wide text-brick-700">Đang phát chung cho cả chùa</p>
-        <p className="mt-1 truncate font-display text-lg">{cur ? `${cur.kind === 'video' ? '🎬' : '🎵'} ${cur.title}` : 'Chưa phát bài nào'}</p>
+        <p className="mt-1 truncate font-display text-lg">{cur ? `${cur.kind === 'youtube' ? '▶️' : cur.kind === 'video' ? '🎬' : '🎵'} ${cur.title}` : 'Chưa phát bài nào'}</p>
         <div
           className={`mt-2 h-2 overflow-hidden rounded-full bg-amberwood-800/20 ${admin && cur ? 'cursor-pointer' : ''}`}
           onClick={(e) => {
-            if (!admin || !cur) return;
+            if (!admin || !cur?.duration) return;
             const r = e.currentTarget.getBoundingClientRect();
             ctl({ op: 'seek', pos: ((e.clientX - r.left) / r.width) * cur.duration });
           }}
           title={admin ? 'Bấm để tua' : undefined}
         >
-          <div className="h-full rounded-full bg-brick-500" style={{ width: cur ? `${(Math.max(0, pos) / cur.duration) * 100}%` : '0%' }} />
+          <div className="h-full rounded-full bg-brick-500" style={{ width: cur?.duration ? `${(Math.max(0, pos) / cur.duration) * 100}%` : '0%' }} />
         </div>
         <p className="mt-1 flex justify-between text-[11px] tabular-nums text-amberwood-800/70">
           <span>{fmt(pos)}</span>
           <span>{st?.paused && cur ? 'Tạm dừng' : ''}</span>
-          <span>{cur ? fmt(cur.duration) : '--:--'}</span>
+          <span>{cur?.duration ? fmt(cur.duration) : '--:--'}</span>
         </p>
         {admin && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -198,6 +222,7 @@ export function StreamPanel() {
         </section>
       )}
 
+      <YoutubeLink admin={admin} />
       <Upload admin={admin} />
       {!admin && (
         <details className="rounded-2xl bg-white/35 px-3 py-2 text-sm">

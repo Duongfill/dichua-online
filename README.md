@@ -86,6 +86,8 @@ chua3d/
 **Phát chung (giai đoạn 5)** – bảng *Phát chung* (Cài đặt → 🎵, hoặc chạm dòng "♪ Đang phát" giữa màn hình)
 - **Tải lên** mp3/wav/m4a/ogg/mp4/webm ≤ 50 MB/file, kho ≤ 500 MB; phải tick cam kết **có quyền sử dụng**. Server **chuyển mã bằng ffmpeg** (`ffmpeg-static`, không cần cài): mp3 128k; video thêm mp4 480p để **chiếu lên màn hình tường trái chánh điện**. File không giải mã được bị loại. Tên file gốc không dùng làm đường dẫn.
 - **Phân quyền**: *Điều phối/Admin* đăng nhập bằng `ADMIN_PASSWORD` (dev mặc định `admin`) → phát/tạm dừng/tua/bài trước–sau, chế độ 🔁 lặp danh sách · 🔂 lặp 1 bài · 🔀 ngẫu nhiên, sắp xếp/xoá hàng chờ, duyệt/từ chối, xoá bài. *Người thường* tải lên = **đề xuất** chờ duyệt; có nút 🚩 báo cáo (3 người báo cáo → gỡ chờ duyệt lại).
+- **Link YouTube**: dán link (watch, youtu.be, shorts, live) vào ô *Thêm/Đề xuất link YouTube*. Phát bằng trình phát YouTube nhúng chính thức (khung nổi góc trái, nút ⤢ phóng to) – đồng bộ cả chùa như file tải lên; video bị chủ kênh tắt nhúng sẽ bị từ chối. Màn hình 3D hiện ảnh bìa video.
+- **Màn hình ngoài sân**: màn hình lớn phía tây sân chùa (có ghế đá) chiếu video Phát chung, giống màn hình trong chánh điện.
 - **Đồng bộ**: server giữ `{bài, startedAt, tạm dừng}` cho cả chùa (mọi kênh, mọi khu vực); client tính vị trí theo giờ server, lệch > 0,6 s thì tua lại; người mới vào nghe tiếp đúng đoạn. Âm lượng = Cài đặt "Nhạc nền / kinh"; nhạc nền tự nhỏ đi khi đang phát. Bỏ tick "Nghe Phát chung" để tắt trên máy mình.
 - Lưu: `server/uploads/` (`MEDIA_DIR`), có `library.json`. ⚠️ Gói free Render **xoá ổ đĩa khi deploy lại / ngủ** → file tải lên mất; cần Render Disk (trả phí) hoặc S3/R2 (giai đoạn sau).
 
@@ -229,7 +231,7 @@ Nguồn asset low-poly miễn phí, nhớ kiểm tra giấy phép CC0/CC-BY: Ken
 | 2 | HUD đầy đủ (tiền tệ, thư, minimap, banner, cột hành động, thanh dưới), chat theo khu vực + chat nhanh, lọc từ, giới hạn tần suất | ✅ |
 | 3 | Thắp hương, Lạy Phật, Thỉnh chuông, Phóng sinh: nút nổi [E], animation, âm thanh, cooldown, cộng công đức; các nút khác báo "Sắp ra mắt" | ✅ |
 | 4 | Ngồi bồ đoàn ở chánh điện; voice LiveKit (SFU): mic tắt mặc định, biểu tượng đang nói trên đầu, tắt tiếng từng người, voice theo khoảng cách ở sân, chung cả phòng ở chánh điện; docker-compose (LiveKit) | ✅ |
-| 5 | Phát chung: upload audio/video, ffmpeg chuyển mã, thư viện + hàng chờ, lặp/ngẫu nhiên, đồng bộ phát + chỉnh drift, phân quyền, đề xuất bài, giới hạn dung lượng, lưu local/S3/R2, báo cáo bản quyền, màn hình video trong chánh điện | ✅ (lưu local; S3/R2 để sau) |
+| 5 | Phát chung: upload audio/video, ffmpeg chuyển mã, thư viện + hàng chờ, lặp/ngẫu nhiên, đồng bộ phát + chỉnh drift, phân quyền, đề xuất bài, giới hạn dung lượng, lưu local/S3/R2, báo cáo bản quyền, màn hình video trong chánh điện + ngoài sân, link YouTube | ✅ (lưu local; S3/R2 để sau) |
 | 6 | Đăng nhập (Google), lưu cấp độ/công đức/túi đồ (SQLite → Postgres), nhiệm vụ hằng ngày, lịch âm (mùng 1, rằm, ngày lễ) và trạng thái "Hoa" | ⏳ tiếp theo |
 
 **Việc nên làm sau giai đoạn 6:** nhiều chùa/bản đồ, sự kiện theo mùa (Vu Lan, Phật Đản), livestream từ chùa thật, hoa đăng/xin xăm/tử vi, chụp ảnh và chia sẻ, PWA và chế độ đồ hoạ thấp cho máy yếu, trang quản trị (báo cáo, chặn, thống kê).

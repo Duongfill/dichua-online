@@ -357,6 +357,18 @@ io.on('connection', (socket) => {
     ack(err ? { ok: false, error: err } : { ok: true });
   });
 
+  socket.on('stream:youtube', async (req, ack) => {
+    if (typeof ack !== 'function') return;
+    const p = socket.data.player;
+    if (!p) return ack({ ok: false, error: 'Bạn chưa vào chùa.' });
+    const r = await stream.addYoutube(String(req?.url ?? '').slice(0, 300), { id: p.profile.key, name: p.name, admin: !!p.profile.admin });
+    ack(r.error ? { ok: false, error: r.error } : { ok: true, pending: r.pending });
+  });
+
+  socket.on('stream:ytDuration', (req) => {
+    if (socket.data.player) stream.setDuration(String(req?.id ?? ''), Number(req?.duration));
+  });
+
   socket.on('stream:report', (req, ack) => {
     if (typeof ack !== 'function') return;
     const p = socket.data.player;

@@ -7,8 +7,8 @@ import { spawn } from 'node:child_process';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import Busboy from 'busboy';
 import ffmpegPath from 'ffmpeg-static';
-import { MEDIA_EXT, MEDIA_MAX_MB, MEDIA_TOTAL_MB, type MediaItem, type StreamOp, type StreamState } from '@chua/shared';
-import { cleanName } from './moderation';
+import { MEDIA_EXT, MEDIA_MAX_MB, MEDIA_TOTAL_MB, parseYoutubeId, type MediaItem, type StreamOp, type StreamState } from '@chua/shared';
+import { cleanChat, cleanName } from './moderation';
 
 const LEAD_MS = 800; // cho client kịp tải trước khi bài bắt đầu
 const VIDEO_EXT = new Set(['mp4', 'webm']);
@@ -149,6 +149,47 @@ export class StreamService {
     }
   }
 
+  // ---------- Link YouTube (phát bằng trình phát nhúng chính thức, không tải về) ----------
+  async addYoutube(url: string, who: { id: string; name: string; admin: boolean }): Promise<{ error?: string; pending?: boolean }> {
+    const vid = parseYoutubeId(url);
+    if (!vid) return { error: 'Link YouTube không hợp lệ.' };
+    const last = this.lastUpload.get(who.id) ?? 0;
+    if (!who.admin && Date.now() - last < 20_000) return { error: 'Xin đợi 20 giây giữa hai lần đề xuất.' };
+    if ([...this.items.values()].some((i) => i.youtubeId === vid && i.status !== 'error')) return { error: 'Video này đã có trong thư viện.' };
+    let title = 'Video YouTube';
+    try {
+      // oEmbed chính thức: lấy tiêu đề + biết video có cho phép nhúng không
+      const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${vid}`)}`, { signal: AbortSignal.timeout(6000) });
+      if (r.status === 401 || r.status === 403) return { error: 'Chủ kênh không cho phép nhúng video này.' };
+      if (r.status === 404 || r.status === 400) return { error: 'Không tìm thấy video (có thể là video riêng tư).' };
+      if (r.ok) title = cleanChat(((await r.json()) as { title?: string }).title ?? '', 80) || title;
+    } catch {
+      /* không gọi được YouTube → vẫn thêm, dùng tên mặc định */
+    }
+    this.lastUpload.set(who.id, Date.now());
+    const item: MediaItem = {
+      id: randomUUID().slice(0, 12), title, kind: 'youtube', youtubeId: vid, duration: 0,
+      uploader: who.name, status: who.admin ? 'ready' : 'pending', createdAt: Date.now(), reports: 0,
+    };
+    this.items.set(item.id, item);
+    this.save();
+    this.emitLib();
+    return { pending: !who.admin };
+  }
+
+  /** Trình phát YouTube ở client báo thời lượng (server không gọi được API YouTube). Nhận lần đầu, trong giới hạn hợp lý. */
+  setDuration(id: string, d: number) {
+    const it = this.items.get(id);
+    if (!it || it.kind !== 'youtube' || it.duration > 0 || !(d >= 1 && d <= 6 * 3600)) return;
+    it.duration = Math.round(d * 100) / 100;
+    this.save();
+    this.emitLib();
+    if (this.state.current === id && !this.state.paused) {
+      if (this.timer) clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.ended(), Math.max(0, it.duration - this.pos()) * 1000 + 300);
+    }
+  }
+
   // ---------- Trình phát ----------
   pos(now = Date.now()) {
     return this.state.paused ? this.state.pausedAt : (now - this.state.startedAt) / 1000;
@@ -161,7 +202,7 @@ export class StreamService {
       Object.assign(this.state, { current: null, paused: true, pausedAt: 0 });
     } else {
       Object.assign(this.state, { current: id, paused: false, pausedAt: 0, startedAt: Date.now() + LEAD_MS - at * 1000 });
-      this.timer = setTimeout(() => this.ended(), (it.duration - at) * 1000 + LEAD_MS + 300);
+      if (it.duration > 0) this.timer = setTimeout(() => this.ended(), (it.duration - at) * 1000 + LEAD_MS + 300);
     }
     this.emitState();
   }
@@ -207,7 +248,7 @@ export class StreamService {
       case 'seek': {
         const cur = s.current && this.items.get(s.current);
         if (!cur) return 'Chưa có bài đang phát.';
-        const p = Math.max(0, Math.min(cur.duration - 1, Number(c.pos) || 0));
+        const p = Math.max(0, cur.duration > 0 ? Math.min(cur.duration - 1, Number(c.pos) || 0) : Number(c.pos) || 0);
         if (s.paused) {
           s.pausedAt = p;
           this.emitState();

@@ -109,6 +109,7 @@ interface GameState {
   streamCtl: (op: StreamOp) => Promise<void>;
   adminLogin: (password: string) => Promise<boolean>;
   reportMedia: (id: string) => Promise<void>;
+  addYoutube: (url: string) => Promise<boolean>;
 }
 
 const load = <T,>(key: string, fallback: T): T => {
@@ -392,6 +393,15 @@ export const useGame = create<GameState>((set, get) => ({
     }
     get().toast(res && !res.ok ? res.error : 'Mất kết nối, xin thử lại.', 'warn');
     return false;
+  },
+  addYoutube: async (url) => {
+    const res = await socket.timeout(10000).emitWithAck('stream:youtube', { url }).catch(() => null);
+    if (!res || !res.ok) {
+      get().toast(res && !res.ok ? res.error : 'Mất kết nối, xin thử lại.', 'warn');
+      return false;
+    }
+    get().toast(res.pending ? 'Đã gửi đề xuất link YouTube – chờ Điều phối duyệt 🙏' : 'Đã thêm video YouTube vào thư viện');
+    return true;
   },
   reportMedia: async (id) => {
     const res = await socket.timeout(5000).emitWithAck('stream:report', { id }).catch(() => null);

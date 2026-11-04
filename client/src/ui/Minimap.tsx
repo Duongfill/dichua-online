@@ -47,12 +47,12 @@ function drawStatic(ctx: CanvasRenderingContext2D, scene: SceneId, size: number,
   if (scene === 'courtyard') {
     ctx.fillStyle = '#9bbb7c';
     ctx.fillRect(0, 0, size, size);
-    rect(-20, -11.5, 20, 22.5, '#c46d50');
+    rect(-44, -11.5, 44, 22.5, '#c46d50');
     rect(-1.5, -10, 1.5, 24, '#e2d1b0');
     const H = COURTYARD.hallBuilding;
     rect(H.x - H.w / 2, H.z - H.d / 2, H.x + H.w / 2, H.z + H.d / 2, '#8f3a28');
-    rect(-24, 23.3, -4, 24.3, '#efe3c8');
-    rect(4, 23.3, 24, 24.3, '#efe3c8');
+    rect(-48, 23.3, -4, 24.3, '#efe3c8');
+    rect(4, 23.3, 48, 24.3, '#efe3c8');
     rect(-4, 23.1, 4, 24, '#a8321f');
     circle(COURTYARD.pond.x, COURTYARD.pond.z, COURTYARD.pond.r + 0.3, '#bfae94');
     circle(COURTYARD.pond.x, COURTYARD.pond.z, COURTYARD.pond.r, '#5c9a95');
@@ -68,6 +68,14 @@ function drawStatic(ctx: CanvasRenderingContext2D, scene: SceneId, size: number,
     label(0, 22.4, 'Cổng tam quan');
     circle(COURTYARD.chess.x, COURTYARD.chess.z, 0.9, '#8f8270');
     label(COURTYARD.chess.x, COURTYARD.chess.z - 1.6, 'Cờ tướng');
+    const S = COURTYARD.screen;
+    rect(S.x - 0.4, S.z - S.w / 2, S.x + 0.4, S.z + S.w / 2, '#2c1f0f');
+    COURTYARD.benches.forEach(([x, z]) => rect(x - 0.35, z - 1.2, x + 0.35, z + 1.2, '#8f8270'));
+    label(S.x + 5, S.z - S.w / 2 - 1.2, 'Màn hình');
+    circle(COURTYARD.stupa.x, COURTYARD.stupa.z, 2.8, '#efe3c8');
+    circle(COURTYARD.stupa.x, COURTYARD.stupa.z, 1.4, '#6e3626');
+    label(COURTYARD.stupa.x, COURTYARD.stupa.z + 4.6, 'Bảo tháp');
+    COURTYARD.eastBonsai.forEach(([x, z]) => circle(x, z, 0.8, '#476f3b'));
   } else {
     ctx.fillStyle = '#2a1a10';
     ctx.fillRect(0, 0, size, size);
