@@ -8,6 +8,31 @@ html, body, #root {
   overflow: hidden;
   overscroll-behavior: none;
 }
+/* iPhone chạy như app: height 100% ngắn hơn màn hình thật (hở vùng thanh Home) → ghim kín cả màn hình */
+#root { position: fixed; inset: 0; height: auto; }
+html { background: #3a2617; }
+
+/* dải tối mỏng sau thanh trạng thái (giờ, pin) khi app tràn lên tai thỏ */
+.status-scrim {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 31; pointer-events: none;
+  height: calc(env(safe-area-inset-top) + 10px);
+  background: linear-gradient(rgba(40, 24, 14, 0.55), rgba(40, 24, 14, 0));
+  display: none;
+}
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .status-scrim { display: block; }
+}
+
+/* Safari iOS: kính mờ (backdrop-filter) làm chữ trên HUD bị nhoè → dùng nền đặc hơn, không làm mờ */
+@supports (-webkit-touch-callout: none) {
+  .glass, .btn-glass, .backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .glass { background-color: rgba(255, 249, 238, 0.78); }
+  .btn-glass { background-color: rgba(255, 249, 238, 0.72); }
+  .bottom-nav { background-color: rgba(255, 246, 232, 0.88); }
+}
 body {
   @apply font-sans text-amberwood-900 antialiased;
   background: #e9d9b8;

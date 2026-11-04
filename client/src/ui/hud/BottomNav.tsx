@@ -7,7 +7,7 @@ export default function BottomNav() {
   return (
     <nav
       aria-label="Chức năng"
-      className="pointer-events-auto flex w-full items-stretch justify-between gap-0.5 border-t border-white/40 bg-white/40 px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 shadow-glass backdrop-blur-md md:w-auto md:justify-center md:gap-1 md:rounded-full md:border md:p-1.5"
+      className="bottom-nav pointer-events-auto flex w-full items-stretch justify-between gap-0.5 border-t border-white/40 bg-white/40 px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 shadow-glass backdrop-blur-md md:w-auto md:justify-center md:gap-1 md:rounded-full md:border md:p-1.5"
     >
       {NAV.map(({ id, label, Icon }) => {
         const active = panel === id;

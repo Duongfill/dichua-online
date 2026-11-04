@@ -49,6 +49,7 @@ export default function App() {
 
   const pwa = (
     <>
+      <div className="status-scrim" />
       <UpdateBanner />
       <IosGuide />
     </>
